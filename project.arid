@@ -1,4 +1,6 @@
+pyversions += 3
 requires +=
     aridity
     lagoon
     PyYAML
+proprietary = true
