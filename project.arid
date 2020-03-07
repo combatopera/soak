@@ -1,3 +1,4 @@
+name = soak
 pyversions += 3
 requires +=
     aridity

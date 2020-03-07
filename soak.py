@@ -64,7 +64,7 @@ def process(log, configpath, templatepath):
     log(dest)
     return dest.parent / context.resolved('diff').value, dest
 
-def main():
+def main_soak():
     parser = ArgumentParser()
     parser.add_argument('-d', action = 'store_true')
     config = parser.parse_args()
