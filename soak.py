@@ -78,7 +78,7 @@ def main_soak():
             context['readfile', ] = Function(readfile)
             with Repl(context) as repl:
                 repl.printf("cwd = %s", configpath.parent)
-                repl.printf(". %s", configpath.resolve())
+                repl.printf(". %s", configpath.name)
             for targetpath in context.resolved('soak').resolvables.keys():
                 futures.append(executor.submit(process, partial(terminal.log, upcount), context, targetpath))
                 upcount -= 1
