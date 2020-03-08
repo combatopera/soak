@@ -49,15 +49,15 @@ class Terminal:
 
 def process(log, context, targetpath):
     cwd = Path(context.resolved('cwd').value)
-    dest = cwd / targetpath
+    dest = Path(targetpath)
     partial = dest.parent / f"{dest.name}.part"
-    log(f"{tput.rev()}{dest}")
+    log(f"{tput.rev()}{cwd / dest}")
     with Repl(context) as repl:
-        repl.printf("redirect %s", partial.resolve())
+        repl.printf("redirect %s", partial)
         repl.printf("< %s", context.resolved('soak', targetpath, 'from').value)
-    partial.rename(dest)
-    log(dest)
-    return cwd / context.resolved('soak', targetpath, 'diff').value, dest
+    (cwd / partial).rename(cwd / dest)
+    log(cwd / dest)
+    return cwd / context.resolved('soak', targetpath, 'diff').value, cwd / dest
 
 def main_soak():
     parser = ArgumentParser()
