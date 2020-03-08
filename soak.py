@@ -71,7 +71,13 @@ class SoakConfig:
             repl.printf("< $(%s %s from)", self.soakkey, reltarget)
         (self.cwd / relpartial).rename(target)
         log(target)
-        return self.cwd / self.context.resolved(self.soakkey, reltarget, 'diff').value, target
+
+    def diff(self):
+        for reltarget in self.reltargets:
+            p = self.cwd / self.context.resolved(self.soakkey, reltarget, 'diff').value
+            q = self.cwd / reltarget
+            with git.show.bg(f"master:./{p}") as gitshow:
+                diff.print('-u', '--color=always', gitshow, q, check = False)
 
 def main_soak():
     parser = ArgumentParser()
@@ -92,7 +98,5 @@ def main_soak():
             f.result()
     tput.rc(stdout = sys.stderr)
     if config.d:
-        for f in futures:
-            p, q = f.result()
-            with git.show.bg(f"master:./{p}") as gitshow:
-                diff.print('-u', '--color=always', gitshow, q, check = False)
+        for soakconfig in soakconfigs:
+            soakconfig.diff()
