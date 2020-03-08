@@ -72,9 +72,9 @@ def main_soak():
         futures = []
         for configpath in configpaths:
             context = Context()
-            context['sops2arid', ] = Function(sops2arid)
-            context['sopsget', ] = Function(sopsget)
-            context['readfile', ] = Function(readfile)
+            context['sops2arid',] = Function(sops2arid)
+            context['sopsget',] = Function(sopsget)
+            context['readfile',] = Function(readfile)
             with Repl(context) as repl:
                 repl.printf("cwd = %s", configpath.parent)
                 repl.printf(". %s", configpath.name)
