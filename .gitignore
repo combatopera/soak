@@ -4,3 +4,4 @@ __pycache__/
 /setup.cfg
 /setup.py
 /build/
+/dist/
