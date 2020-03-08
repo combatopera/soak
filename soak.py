@@ -64,13 +64,14 @@ class SoakConfig:
 
     def process(self, log, reltarget):
         relpartial = f"{reltarget}.part"
-        log(f"{tput.rev()}{self.cwd / reltarget}")
+        target = self.cwd / reltarget
+        log(f"{tput.rev()}{target}")
         with Repl(self.context.createchild()) as repl:
             repl.printf("redirect %s", relpartial)
             repl.printf("< $(%s %s from)", self.soakkey, reltarget)
-        (self.cwd / relpartial).rename(self.cwd / reltarget)
-        log(self.cwd / reltarget)
-        return self.cwd / self.context.resolved(self.soakkey, reltarget, 'diff').value, self.cwd / reltarget
+        (self.cwd / relpartial).rename(target)
+        log(target)
+        return self.cwd / self.context.resolved(self.soakkey, reltarget, 'diff').value, target
 
 def main_soak():
     parser = ArgumentParser()
