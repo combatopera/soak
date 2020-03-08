@@ -59,17 +59,17 @@ class SoakConfig:
         with Repl(self.context) as repl:
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
+        self.cwd = configpath.parent
 
     def process(self, log, dest):
         partial = f"{dest}.part"
-        cwd = Path(self.context.resolved('cwd').value)
-        log(f"{tput.rev()}{cwd / dest}")
+        log(f"{tput.rev()}{self.cwd / dest}")
         with Repl(self.context) as repl: # FIXME: Use child.
             repl.printf("redirect %s", partial)
             repl.printf("< $(%s %s from)", soakkey, dest)
-        (cwd / partial).rename(cwd / dest)
-        log(cwd / dest)
-        return cwd / self.context.resolved(soakkey, dest, 'diff').value, cwd / dest
+        (self.cwd / partial).rename(self.cwd / dest)
+        log(self.cwd / dest)
+        return self.cwd / self.context.resolved(soakkey, dest, 'diff').value, self.cwd / dest
 
 def main_soak():
     parser = ArgumentParser()
