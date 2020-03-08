@@ -5,3 +5,4 @@ requires +=
     lagoon
     PyYAML
 proprietary = true
+executable = true
