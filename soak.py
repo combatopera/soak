@@ -64,7 +64,7 @@ class SoakConfig:
     def process(self, log, dest):
         partial = f"{dest}.part"
         log(f"{tput.rev()}{self.cwd / dest}")
-        with Repl(self.context) as repl: # FIXME: Use child.
+        with Repl(self.context.createchild()) as repl:
             repl.printf("redirect %s", partial)
             repl.printf("< $(%s %s from)", soakkey, dest)
         (self.cwd / partial).rename(self.cwd / dest)
