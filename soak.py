@@ -103,7 +103,7 @@ class SoakConfig:
             orig = self.dirpath / self.context.resolved(self.soakkey, reltarget, 'diff').value
             filter = nullcontext if self.context.resolved(self.soakkey, reltarget, 'plain').value else partial(unsops, orig.suffix)
             with git.show.bg(f"master:./{orig}") as origstream, filter(origstream) as plainstream:
-                diff.print('-u', '--color=always', plainstream, self.dirpath / reltarget, check = False)
+                diff.print('-us', '--color=always', plainstream, self.dirpath / reltarget, check = False)
 
 def main_soak():
     parser = ArgumentParser()
