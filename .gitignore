@@ -1,2 +1,5 @@
+#gclean
+__pycache__/
+/soak.egg-info/
 /setup.cfg
 /setup.py
