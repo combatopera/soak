@@ -8,8 +8,6 @@ from pathlib import Path
 from threading import Lock
 import subprocess, sys, yaml
 
-soakkey = 'soak'
-
 def _unsops(context, resolvable):
     return yaml.safe_load(bash('-ic', 'sops -d "$@"', 'sops', resolvable.resolve(context).cat(), start_new_session = True, stderr = subprocess.DEVNULL))
 
@@ -51,6 +49,8 @@ class Terminal:
 
 class SoakConfig:
 
+    soakkey = 'soak'
+
     def __init__(self, configpath):
         self.context = Context()
         self.context['sops2arid',] = Function(sops2arid)
@@ -66,10 +66,10 @@ class SoakConfig:
         log(f"{tput.rev()}{self.cwd / dest}")
         with Repl(self.context.createchild()) as repl:
             repl.printf("redirect %s", partial)
-            repl.printf("< $(%s %s from)", soakkey, dest)
+            repl.printf("< $(%s %s from)", self.soakkey, dest)
         (self.cwd / partial).rename(self.cwd / dest)
         log(self.cwd / dest)
-        return self.cwd / self.context.resolved(soakkey, dest, 'diff').value, self.cwd / dest
+        return self.cwd / self.context.resolved(self.soakkey, dest, 'diff').value, self.cwd / dest
 
 def main_soak():
     parser = ArgumentParser()
@@ -83,7 +83,7 @@ def main_soak():
     with ThreadPoolExecutor() as executor:
         futures = []
         for soakconfig in soakconfigs:
-            for dest in soakconfig.context.resolved(soakkey).resolvables.keys():
+            for dest in soakconfig.context.resolved(soakconfig.soakkey).resolvables.keys():
                 futures.append(executor.submit(soakconfig.process, partial(terminal.log, upcount), dest))
                 upcount -= 1
         for f in futures:
