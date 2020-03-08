@@ -50,12 +50,12 @@ class Terminal:
 class SoakConfig:
 
     soakkey = 'soak'
+    parent = Context()
+    for f in sops2arid, sopsget, readfile:
+        parent[f.__name__,] = Function(f)
 
     def __init__(self, configpath):
-        self.context = Context()
-        self.context['sops2arid',] = Function(sops2arid)
-        self.context['sopsget',] = Function(sopsget)
-        self.context['readfile',] = Function(readfile)
+        self.context = self.parent.createchild()
         with Repl(self.context) as repl:
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
