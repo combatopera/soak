@@ -51,6 +51,11 @@ def readfile(context, resolvable):
     with open(resolvable.resolve(context).cat()) as f:
         return Text(f.read())
 
+def blockliteral(context, indentresolvable, textresolvable):
+    indent = (indentresolvable.resolve(context).value - 2) * ' '
+    text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
+    return Text('\n'.join(f"{indent if i else ''}{line}" for i, line in enumerate(text.splitlines())))
+
 class Terminal:
 
     def __init__(self):
@@ -72,6 +77,7 @@ class SoakConfig:
         repl('plain = false')
     for f in sops2arid, sopsget, readfile:
         parent[f.__name__,] = Function(f)
+    parent['|',] = Function(blockliteral)
     del repl, f
 
     def __init__(self, configpath):
