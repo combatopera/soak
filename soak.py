@@ -77,7 +77,7 @@ def main_soak():
     parser.add_argument('-d', action = 'store_true')
     config = parser.parse_args()
     soakconfigs = [SoakConfig(p) for p in Path('.').rglob('soak.arid')]
-    upcount = len(soakconfigs)
+    upcount = sum(len(sc.targets) for sc in soakconfigs)
     sys.stderr.write('\n' * upcount)
     tput.sc(stdout = sys.stderr)
     terminal = Terminal()
