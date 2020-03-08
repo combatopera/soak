@@ -64,7 +64,7 @@ def main_soak():
     parser = ArgumentParser()
     parser.add_argument('-d', action = 'store_true')
     config = parser.parse_args()
-    configpaths = list(Path('.').rglob('deploy.arid'))
+    configpaths = list(Path('.').rglob('soak.arid'))
     for _ in configpaths:
         print(file = sys.stderr)
     tput.sc(stdout = sys.stderr)
