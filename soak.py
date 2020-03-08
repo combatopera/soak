@@ -47,22 +47,17 @@ class Terminal:
             tput.sgr0(stdout = sys.stderr)
             sys.stderr.flush()
 
-def process(log, configpath, targetpath, templateconf):
-    dest = configpath.parent / targetpath
+def process(log, context, targetpath):
+    cwd = Path(context.resolved('cwd').value)
+    dest = cwd / targetpath
     partial = dest.parent / f"{dest.name}.part"
     log(f"{tput.rev()}{dest}")
-    context = Context()
-    context['sops2arid', ] = Function(sops2arid)
-    context['sopsget', ] = Function(sopsget)
-    context['readfile', ] = Function(readfile)
     with Repl(context) as repl:
-        repl.printf("cwd = %s", configpath.parent)
-        repl.printf(". %s", configpath.resolve())
         repl.printf("redirect %s", partial.resolve())
-        repl.printf("< %s", (configpath.parent / templateconf['from']).resolve())
+        repl.printf("< %s", (cwd / context.resolved('soak', targetpath, 'from').value).resolve())
     partial.rename(dest)
     log(dest)
-    return configpath.parent / templateconf['diff'], dest
+    return cwd / context.resolved('soak', targetpath, 'diff').value, dest
 
 def main_soak():
     parser = ArgumentParser()
@@ -78,12 +73,14 @@ def main_soak():
         futures = []
         for configpath in configpaths:
             context = Context()
+            context['sops2arid', ] = Function(sops2arid)
+            context['sopsget', ] = Function(sopsget)
+            context['readfile', ] = Function(readfile)
             with Repl(context) as repl:
                 repl.printf("cwd = %s", configpath.parent)
                 repl.printf(". %s", configpath.resolve())
-            soak = context.resolved('soak').unravel()
-            for targetpath, templateconf in soak.items():
-                futures.append(executor.submit(process, partial(terminal.log, upcount), configpath, targetpath, templateconf))
+            for targetpath in context.resolved('soak').resolvables.keys():
+                futures.append(executor.submit(process, partial(terminal.log, upcount), context, targetpath))
                 upcount -= 1
         for f in futures:
             f.result()
