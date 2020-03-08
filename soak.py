@@ -51,8 +51,11 @@ class SoakConfig:
 
     soakkey = 'soak'
     parent = Context()
+    with Repl(parent) as repl:
+        repl('plain = false')
     for f in sops2arid, sopsget, readfile:
         parent[f.__name__,] = Function(f)
+    del repl, f
 
     def __init__(self, configpath):
         self.context = self.parent.createchild()
@@ -74,6 +77,7 @@ class SoakConfig:
 
     def diff(self):
         for reltarget in self.reltargets:
+            plain = self.context.resolved(self.soakkey, reltarget, 'plain').value
             p = self.cwd / self.context.resolved(self.soakkey, reltarget, 'diff').value
             q = self.cwd / reltarget
             with git.show.bg(f"master:./{p}") as gitshow:
