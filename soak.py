@@ -14,16 +14,19 @@ import subprocess, sys, tempfile, yaml
 def nullcontext(x):
     yield x
 
+sopsargs = '-ic', 'sops -d "$@"', 'sops'
+sopskwargs = dict(start_new_session = True, stderr = subprocess.DEVNULL)
+
 @contextmanager
 def unsops(suffix, encstream):
     with tempfile.NamedTemporaryFile('w', suffix = suffix) as f:
         copyfileobj(encstream, f)
         f.flush()
-        with bash.bg('-ic', 'sops -d "$@"', 'sops', f.name, start_new_session = True, stderr = subprocess.DEVNULL) as decstream:
+        with bash.bg(*sopsargs, f.name, **sopskwargs) as decstream:
             yield decstream
 
 def _unsops(context, resolvable):
-    return yaml.safe_load(bash('-ic', 'sops -d "$@"', 'sops', resolvable.resolve(context).cat(), start_new_session = True, stderr = subprocess.DEVNULL))
+    return yaml.safe_load(bash(*sopsargs, resolvable.resolve(context).cat(), **sopskwargs))
 
 def sops2arid(context, resolvable):
     def process(obj, *path):
