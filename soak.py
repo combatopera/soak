@@ -58,10 +58,10 @@ class Terminal:
 
     def log(self, upcount, text):
         with self.lock:
-            tput.rc(stdout = sys.stderr)
             tput.cuu(upcount, stdout = sys.stderr)
-            print(text, end = '', file = sys.stderr)
+            print(text, file = sys.stderr)
             tput.sgr0(stdout = sys.stderr)
+            tput.rc(stdout = sys.stderr)
             sys.stderr.flush()
 
 class SoakConfig:
@@ -118,7 +118,6 @@ def main_soak():
                     upcount -= 1
             for f in futures:
                 f.result()
-        tput.rc(stdout = sys.stderr)
     if config.d:
         for soakconfig in soakconfigs:
             soakconfig.diff()
