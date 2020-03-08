@@ -49,39 +49,42 @@ class Terminal:
             tput.sgr0(stdout = sys.stderr)
             sys.stderr.flush()
 
-def process(log, context, dest):
-    partial = f"{dest}.part"
-    cwd = Path(context.resolved('cwd').value)
-    log(f"{tput.rev()}{cwd / dest}")
-    with Repl(context) as repl:
-        repl.printf("redirect %s", partial)
-        repl.printf("< $(%s %s from)", soakkey, dest)
-    (cwd / partial).rename(cwd / dest)
-    log(cwd / dest)
-    return cwd / context.resolved(soakkey, dest, 'diff').value, cwd / dest
+class SoakConfig:
+
+    def __init__(self, configpath):
+        self.context = Context()
+        self.context['sops2arid',] = Function(sops2arid)
+        self.context['sopsget',] = Function(sopsget)
+        self.context['readfile',] = Function(readfile)
+        with Repl(self.context) as repl:
+            repl.printf("cwd = %s", configpath.parent)
+            repl.printf(". %s", configpath.name)
+
+    def process(self, log, dest):
+        partial = f"{dest}.part"
+        cwd = Path(self.context.resolved('cwd').value)
+        log(f"{tput.rev()}{cwd / dest}")
+        with Repl(self.context) as repl: # FIXME: Use child.
+            repl.printf("redirect %s", partial)
+            repl.printf("< $(%s %s from)", soakkey, dest)
+        (cwd / partial).rename(cwd / dest)
+        log(cwd / dest)
+        return cwd / self.context.resolved(soakkey, dest, 'diff').value, cwd / dest
 
 def main_soak():
     parser = ArgumentParser()
     parser.add_argument('-d', action = 'store_true')
     config = parser.parse_args()
-    configpaths = list(Path('.').rglob('soak.arid'))
-    for _ in configpaths:
-        print(file = sys.stderr)
+    soakconfigs = [SoakConfig(p) for p in Path('.').rglob('soak.arid')]
+    upcount = len(soakconfigs)
+    sys.stderr.write('\n' * upcount)
     tput.sc(stdout = sys.stderr)
-    upcount = len(configpaths)
     terminal = Terminal()
     with ThreadPoolExecutor() as executor:
         futures = []
-        for configpath in configpaths:
-            context = Context()
-            context['sops2arid',] = Function(sops2arid)
-            context['sopsget',] = Function(sopsget)
-            context['readfile',] = Function(readfile)
-            with Repl(context) as repl:
-                repl.printf("cwd = %s", configpath.parent)
-                repl.printf(". %s", configpath.name)
-            for dest in context.resolved(soakkey).resolvables.keys():
-                futures.append(executor.submit(process, partial(terminal.log, upcount), context, dest))
+        for soakconfig in soakconfigs:
+            for dest in soakconfig.context.resolved(soakkey).resolvables.keys():
+                futures.append(executor.submit(soakconfig.process, partial(terminal.log, upcount), dest))
                 upcount -= 1
         for f in futures:
             f.result()
