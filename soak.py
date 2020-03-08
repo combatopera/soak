@@ -80,24 +80,24 @@ class SoakConfig:
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
         self.reltargets = self.context.resolved(self.soakkey).resolvables.keys()
-        self.cwd = configpath.parent
+        self.dirpath = configpath.parent
 
     def process(self, log, reltarget):
         relpartial = f"{reltarget}.part"
-        target = self.cwd / reltarget
+        target = self.dirpath / reltarget
         log(f"{tput.rev()}{target}")
         with Repl(self.context.createchild()) as repl:
             repl.printf("redirect %s", relpartial)
             repl.printf("< $(%s %s from)", self.soakkey, reltarget)
-        (self.cwd / relpartial).rename(target)
+        (self.dirpath / relpartial).rename(target)
         log(target)
 
     def diff(self):
         for reltarget in self.reltargets:
-            orig = self.cwd / self.context.resolved(self.soakkey, reltarget, 'diff').value
+            orig = self.dirpath / self.context.resolved(self.soakkey, reltarget, 'diff').value
             filter = nullcontext if self.context.resolved(self.soakkey, reltarget, 'plain').value else partial(unsops, orig.suffix)
             with git.show.bg(f"master:./{orig}") as origstream, filter(origstream) as plainstream:
-                diff.print('-u', '--color=always', plainstream, self.cwd / reltarget, check = False)
+                diff.print('-u', '--color=always', plainstream, self.dirpath / reltarget, check = False)
 
 def main_soak():
     parser = ArgumentParser()
