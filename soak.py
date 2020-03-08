@@ -59,33 +59,33 @@ class SoakConfig:
         with Repl(self.context) as repl:
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
-        self.targets = self.context.resolved(self.soakkey).resolvables.keys()
+        self.reltargets = self.context.resolved(self.soakkey).resolvables.keys()
         self.cwd = configpath.parent
 
-    def process(self, log, target):
-        partial = f"{target}.part"
-        log(f"{tput.rev()}{self.cwd / target}")
+    def process(self, log, reltarget):
+        relpartial = f"{reltarget}.part"
+        log(f"{tput.rev()}{self.cwd / reltarget}")
         with Repl(self.context.createchild()) as repl:
-            repl.printf("redirect %s", partial)
-            repl.printf("< $(%s %s from)", self.soakkey, target)
-        (self.cwd / partial).rename(self.cwd / target)
-        log(self.cwd / target)
-        return self.cwd / self.context.resolved(self.soakkey, target, 'diff').value, self.cwd / target
+            repl.printf("redirect %s", relpartial)
+            repl.printf("< $(%s %s from)", self.soakkey, reltarget)
+        (self.cwd / relpartial).rename(self.cwd / reltarget)
+        log(self.cwd / reltarget)
+        return self.cwd / self.context.resolved(self.soakkey, reltarget, 'diff').value, self.cwd / reltarget
 
 def main_soak():
     parser = ArgumentParser()
     parser.add_argument('-d', action = 'store_true')
     config = parser.parse_args()
     soakconfigs = [SoakConfig(p) for p in Path('.').rglob('soak.arid')]
-    upcount = sum(len(sc.targets) for sc in soakconfigs)
+    upcount = sum(len(sc.reltargets) for sc in soakconfigs)
     sys.stderr.write('\n' * upcount)
     tput.sc(stdout = sys.stderr)
     terminal = Terminal()
     with ThreadPoolExecutor() as executor:
         futures = []
         for soakconfig in soakconfigs:
-            for target in soakconfig.targets:
-                futures.append(executor.submit(soakconfig.process, partial(terminal.log, upcount), target))
+            for reltarget in soakconfig.reltargets:
+                futures.append(executor.submit(soakconfig.process, partial(terminal.log, upcount), reltarget))
                 upcount -= 1
         for f in futures:
             f.result()
