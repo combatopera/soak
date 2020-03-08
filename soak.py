@@ -47,17 +47,16 @@ class Terminal:
             tput.sgr0(stdout = sys.stderr)
             sys.stderr.flush()
 
-def process(log, context, targetpath):
+def process(log, context, dest):
+    partial = f"{dest}.part"
     cwd = Path(context.resolved('cwd').value)
-    dest = Path(targetpath)
-    partial = dest.parent / f"{dest.name}.part"
     log(f"{tput.rev()}{cwd / dest}")
     with Repl(context) as repl:
         repl.printf("redirect %s", partial)
-        repl.printf("< $(soak %s from)", targetpath)
+        repl.printf("< $(soak %s from)", dest)
     (cwd / partial).rename(cwd / dest)
     log(cwd / dest)
-    return cwd / context.resolved('soak', targetpath, 'diff').value, cwd / dest
+    return cwd / context.resolved('soak', dest, 'diff').value, cwd / dest
 
 def main_soak():
     parser = ArgumentParser()
@@ -79,8 +78,8 @@ def main_soak():
             with Repl(context) as repl:
                 repl.printf("cwd = %s", configpath.parent)
                 repl.printf(". %s", configpath.name)
-            for targetpath in context.resolved('soak').resolvables.keys():
-                futures.append(executor.submit(process, partial(terminal.log, upcount), context, targetpath))
+            for dest in context.resolved('soak').resolvables.keys():
+                futures.append(executor.submit(process, partial(terminal.log, upcount), context, dest))
                 upcount -= 1
         for f in futures:
             f.result()
