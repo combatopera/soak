@@ -59,17 +59,18 @@ class SoakConfig:
         with Repl(self.context) as repl:
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
+        self.targets = self.context.resolved(self.soakkey).resolvables.keys()
         self.cwd = configpath.parent
 
-    def process(self, log, dest):
-        partial = f"{dest}.part"
-        log(f"{tput.rev()}{self.cwd / dest}")
+    def process(self, log, target):
+        partial = f"{target}.part"
+        log(f"{tput.rev()}{self.cwd / target}")
         with Repl(self.context.createchild()) as repl:
             repl.printf("redirect %s", partial)
-            repl.printf("< $(%s %s from)", self.soakkey, dest)
-        (self.cwd / partial).rename(self.cwd / dest)
-        log(self.cwd / dest)
-        return self.cwd / self.context.resolved(self.soakkey, dest, 'diff').value, self.cwd / dest
+            repl.printf("< $(%s %s from)", self.soakkey, target)
+        (self.cwd / partial).rename(self.cwd / target)
+        log(self.cwd / target)
+        return self.cwd / self.context.resolved(self.soakkey, target, 'diff').value, self.cwd / target
 
 def main_soak():
     parser = ArgumentParser()
@@ -83,8 +84,8 @@ def main_soak():
     with ThreadPoolExecutor() as executor:
         futures = []
         for soakconfig in soakconfigs:
-            for dest in soakconfig.context.resolved(soakconfig.soakkey).resolvables.keys():
-                futures.append(executor.submit(soakconfig.process, partial(terminal.log, upcount), dest))
+            for target in soakconfig.targets:
+                futures.append(executor.submit(soakconfig.process, partial(terminal.log, upcount), target))
                 upcount -= 1
         for f in futures:
             f.result()
