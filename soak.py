@@ -54,7 +54,7 @@ def process(log, context, targetpath):
     log(f"{tput.rev()}{dest}")
     with Repl(context) as repl:
         repl.printf("redirect %s", partial.resolve())
-        repl.printf("< %s", (cwd / context.resolved('soak', targetpath, 'from').value).resolve())
+        repl.printf("< %s", context.resolved('soak', targetpath, 'from').value)
     partial.rename(dest)
     log(dest)
     return cwd / context.resolved('soak', targetpath, 'diff').value, dest
