@@ -47,22 +47,22 @@ class Terminal:
             tput.sgr0(stdout = sys.stderr)
             sys.stderr.flush()
 
-def process(log, configpath, templatepath):
-    dest = templatepath.parent / templatepath.stem
+def process(log, configpath, targetpath, templateconf):
+    dest = configpath.parent / targetpath
     partial = dest.parent / f"{dest.name}.part"
     log(f"{tput.rev()}{dest}")
     context = Context()
-    context['cwd', ] = Text(configpath.parent)
     context['sops2arid', ] = Function(sops2arid)
     context['sopsget', ] = Function(sopsget)
     context['readfile', ] = Function(readfile)
     with Repl(context) as repl:
+        repl.printf("cwd = %s", configpath.parent)
         repl.printf(". %s", configpath.resolve())
         repl.printf("redirect %s", partial.resolve())
-        repl.printf("< %s", templatepath.resolve())
+        repl.printf("< %s", (configpath.parent / templateconf['from']).resolve())
     partial.rename(dest)
     log(dest)
-    return dest.parent / context.resolved('diff').value, dest
+    return configpath.parent / templateconf['diff'], dest
 
 def main_soak():
     parser = ArgumentParser()
@@ -77,8 +77,13 @@ def main_soak():
     with ThreadPoolExecutor() as executor:
         futures = []
         for configpath in configpaths:
-            for templatepath in configpath.parent.glob('*.aridt'):
-                futures.append(executor.submit(process, partial(terminal.log, upcount), configpath, templatepath))
+            context = Context()
+            with Repl(context) as repl:
+                repl.printf("cwd = %s", configpath.parent)
+                repl.printf(". %s", configpath.resolve())
+            soak = context.resolved('soak').unravel()
+            for targetpath, templateconf in soak.items():
+                futures.append(executor.submit(process, partial(terminal.log, upcount), configpath, targetpath, templateconf))
                 upcount -= 1
         for f in futures:
             f.result()
