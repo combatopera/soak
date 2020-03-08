@@ -62,9 +62,9 @@ def sops2arid(context, resolvable):
     process(_unsops(context, resolvable))
     return Text(''.join(f"{' '.join(path)} = {value}\n" for path, value in entries))
 
-def sopsget(context, resolvable, *resolvables):
-    obj = _unsops(context, resolvable)
-    for r in resolvables:
+def sopsget(context, pathresolvable, *nameresolvables):
+    obj = _unsops(context, pathresolvable)
+    for r in nameresolvables:
         obj = obj[r.resolve(context).cat()]
     return Text(obj)
 
