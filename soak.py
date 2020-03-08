@@ -8,6 +8,8 @@ from pathlib import Path
 from threading import Lock
 import subprocess, sys, yaml
 
+soakkey = 'soak'
+
 def _unsops(context, resolvable):
     return yaml.safe_load(bash('-ic', 'sops -d "$@"', 'sops', resolvable.resolve(context).cat(), start_new_session = True, stderr = subprocess.DEVNULL))
 
@@ -53,10 +55,10 @@ def process(log, context, dest):
     log(f"{tput.rev()}{cwd / dest}")
     with Repl(context) as repl:
         repl.printf("redirect %s", partial)
-        repl.printf("< $(soak %s from)", dest)
+        repl.printf("< $(%s %s from)", soakkey, dest)
     (cwd / partial).rename(cwd / dest)
     log(cwd / dest)
-    return cwd / context.resolved('soak', dest, 'diff').value, cwd / dest
+    return cwd / context.resolved(soakkey, dest, 'diff').value, cwd / dest
 
 def main_soak():
     parser = ArgumentParser()
@@ -78,7 +80,7 @@ def main_soak():
             with Repl(context) as repl:
                 repl.printf("cwd = %s", configpath.parent)
                 repl.printf(". %s", configpath.name)
-            for dest in context.resolved('soak').resolvables.keys():
+            for dest in context.resolved(soakkey).resolvables.keys():
                 futures.append(executor.submit(process, partial(terminal.log, upcount), context, dest))
                 upcount -= 1
         for f in futures:
