@@ -3,3 +3,4 @@ __pycache__/
 /soak.egg-info/
 /setup.cfg
 /setup.py
+/build/
