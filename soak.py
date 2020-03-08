@@ -20,7 +20,7 @@ from aridity import Context, Repl
 from aridimpl.model import Function, Text
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
-from functools import partial
+from functools import lru_cache, partial
 from lagoon import bash, diff, git, tput
 from pathlib import Path
 from shutil import copyfileobj
@@ -42,8 +42,12 @@ def unsops(suffix, encstream):
         with bash.bg(*sopsargs, f.name, **sopskwargs) as decstream:
             yield decstream
 
+@lru_cache()
+def _unsopsimpl(path):
+    return yaml.safe_load(bash(*sopsargs, path, **sopskwargs))
+
 def _unsops(context, resolvable):
-    return yaml.safe_load(bash(*sopsargs, resolvable.resolve(context).cat(), **sopskwargs))
+    return _unsopsimpl(resolvable.resolve(context).cat())
 
 def sops2arid(context, resolvable):
     def process(obj, *path):
