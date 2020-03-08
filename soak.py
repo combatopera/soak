@@ -2,11 +2,25 @@ from argparse import ArgumentParser
 from aridity import Context, Repl
 from aridimpl.model import Function, Text
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from functools import partial
 from lagoon import bash, diff, git, tput
 from pathlib import Path
+from shutil import copyfileobj
 from threading import Lock
-import subprocess, sys, yaml
+import subprocess, sys, tempfile, yaml
+
+@contextmanager
+def nullcontext(x):
+    yield x
+
+@contextmanager
+def unsops(suffix, encstream):
+    with tempfile.NamedTemporaryFile('w', suffix = suffix) as f:
+        copyfileobj(encstream, f)
+        f.flush()
+        with bash.bg('-ic', 'sops -d "$@"', 'sops', f.name, start_new_session = True, stderr = subprocess.DEVNULL) as decstream:
+            yield decstream
 
 def _unsops(context, resolvable):
     return yaml.safe_load(bash('-ic', 'sops -d "$@"', 'sops', resolvable.resolve(context).cat(), start_new_session = True, stderr = subprocess.DEVNULL))
@@ -77,30 +91,31 @@ class SoakConfig:
 
     def diff(self):
         for reltarget in self.reltargets:
-            plain = self.context.resolved(self.soakkey, reltarget, 'plain').value
-            p = self.cwd / self.context.resolved(self.soakkey, reltarget, 'diff').value
-            q = self.cwd / reltarget
-            with git.show.bg(f"master:./{p}") as gitshow:
-                diff.print('-u', '--color=always', gitshow, q, check = False)
+            orig = self.cwd / self.context.resolved(self.soakkey, reltarget, 'diff').value
+            filter = nullcontext if self.context.resolved(self.soakkey, reltarget, 'plain').value else partial(unsops, orig.suffix)
+            with git.show.bg(f"master:./{orig}") as origstream, filter(origstream) as plainstream:
+                diff.print('-u', '--color=always', plainstream, self.cwd / reltarget, check = False)
 
 def main_soak():
     parser = ArgumentParser()
+    parser.add_argument('-n', action = 'store_true')
     parser.add_argument('-d', action = 'store_true')
     config = parser.parse_args()
     soakconfigs = [SoakConfig(p) for p in Path('.').rglob('soak.arid')]
-    upcount = sum(len(sc.reltargets) for sc in soakconfigs)
-    sys.stderr.write('\n' * upcount)
-    tput.sc(stdout = sys.stderr)
-    terminal = Terminal()
-    with ThreadPoolExecutor() as executor:
-        futures = []
-        for soakconfig in soakconfigs:
-            for reltarget in soakconfig.reltargets:
-                futures.append(executor.submit(soakconfig.process, partial(terminal.log, upcount), reltarget))
-                upcount -= 1
-        for f in futures:
-            f.result()
-    tput.rc(stdout = sys.stderr)
+    if not config.n:
+        upcount = sum(len(sc.reltargets) for sc in soakconfigs)
+        sys.stderr.write('\n' * upcount)
+        tput.sc(stdout = sys.stderr)
+        terminal = Terminal()
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for soakconfig in soakconfigs:
+                for reltarget in soakconfig.reltargets:
+                    futures.append(executor.submit(soakconfig.process, partial(terminal.log, upcount), reltarget))
+                    upcount -= 1
+            for f in futures:
+                f.result()
+        tput.rc(stdout = sys.stderr)
     if config.d:
         for soakconfig in soakconfigs:
             soakconfig.diff()
