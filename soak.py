@@ -44,6 +44,7 @@ def unsops(suffix, encstream):
 
 @lru_cache()
 def _unsopsimpl(path):
+    # TODO: Show stderr on failure.
     return yaml.safe_load(bash(*sopsargs, path, **sopskwargs))
 
 def _unsops(context, resolvable):
