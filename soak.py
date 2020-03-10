@@ -32,20 +32,23 @@ def nullcontext(x):
     yield x
 
 sopsargs = '-ic', 'sops -d "$@"', 'sops'
-sopskwargs = dict(start_new_session = True, stderr = subprocess.DEVNULL)
+sopskwargs = dict(start_new_session = True)
 
 @contextmanager
 def unsops(suffix, encstream):
     with tempfile.NamedTemporaryFile('w', suffix = suffix) as f:
         copyfileobj(encstream, f)
         f.flush()
-        with bash.bg(*sopsargs, f.name, **sopskwargs) as decstream:
+        with bash.bg(*sopsargs, f.name, **sopskwargs, stderr = subprocess.DEVNULL) as decstream:
             yield decstream
 
 @lru_cache()
 def _unsopsimpl(path):
-    # TODO: Show stderr on failure.
-    return yaml.safe_load(bash(*sopsargs, path, **sopskwargs))
+    completed = bash(*sopsargs, path, **sopskwargs, stderr = subprocess.PIPE, check = False)
+    if completed.returncode:
+        sys.stderr.write(completed.stderr)
+        completed.check_returncode()
+    return yaml.safe_load(completed.stdout)
 
 def _unsops(context, resolvable):
     return _unsopsimpl(resolvable.resolve(context).cat())
