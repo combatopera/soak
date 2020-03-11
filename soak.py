@@ -76,6 +76,10 @@ def readfile(context, resolvable):
     with open(resolvable.resolve(context).cat()) as f:
         return Text(f.read())
 
+def xmlquote(context, resolvable):
+    from xml.sax.saxutils import escape
+    return Text(escape(resolvable.resolve(context).cat(), {'"': '&quot;', "'": '&apos;'}))
+
 def blockliteral(context, indentresolvable, textresolvable):
     indent = (indentresolvable.resolve(context).value - 2) * ' '
     text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
@@ -102,6 +106,7 @@ class SoakConfig:
         repl('plain = false')
     for f in sops2arid, sopsget, readfile:
         parent[f.__name__,] = Function(f)
+    parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
     del repl, f
 
