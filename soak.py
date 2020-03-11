@@ -17,7 +17,8 @@
 
 from argparse import ArgumentParser
 from aridity import Context, Repl
-from aridimpl.model import Function, Text
+from aridimpl.grammar import templateparser
+from aridimpl.model import Concat, Function, Text
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from functools import lru_cache, partial
@@ -75,6 +76,10 @@ def readfile(context, resolvable):
     with open(resolvable.resolve(context).cat()) as f:
         return Text(f.read())
 
+def processtemplate(context, resolvable):
+    with open(resolvable.resolve(context).cat()) as f:
+        return Text(Concat(templateparser(f.read())).resolve(context).cat()) # TODO: There should be an easier way.
+
 def xmlquote(context, resolvable):
     from xml.sax.saxutils import escape
     return Text(escape(resolvable.resolve(context).cat(), {'"': '&quot;', "'": '&apos;'}))
@@ -103,7 +108,7 @@ class SoakConfig:
     parent = Context()
     with Repl(parent) as repl:
         repl('plain = false')
-    for f in sops2arid, sopsget, readfile:
+    for f in sops2arid, sopsget, readfile, processtemplate:
         parent[f.__name__,] = Function(f)
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
