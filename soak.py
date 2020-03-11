@@ -31,20 +31,19 @@ import subprocess, sys, tempfile, yaml
 def nullcontext(x):
     yield x
 
-sopsargs = '-ic', 'sops -d "$@"', 'sops'
-sopskwargs = dict(start_new_session = True)
+sops = bash.partial('-ic', 'sops -d "$@"', 'sops', start_new_session = True)
 
 @contextmanager
 def unsops(suffix, encstream):
     with tempfile.NamedTemporaryFile('w', suffix = suffix) as f:
         copyfileobj(encstream, f)
         f.flush()
-        with bash.bg(*sopsargs, f.name, **sopskwargs, stderr = subprocess.DEVNULL) as decstream:
+        with sops.bg(f.name, stderr = subprocess.DEVNULL) as decstream:
             yield decstream
 
 @lru_cache()
 def _unsopsimpl(path):
-    completed = bash(*sopsargs, path, **sopskwargs, stderr = subprocess.PIPE, check = False)
+    completed = sops(path, stderr = subprocess.PIPE, check = False)
     if completed.returncode:
         sys.stderr.write(completed.stderr)
         completed.check_returncode()
