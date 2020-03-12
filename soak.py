@@ -134,6 +134,7 @@ class SoakConfig:
         log(target)
 
     def diff(self):
+        # TODO: Parallelise the expensive bits.
         for reltarget in self.reltargets:
             orig = self.dirpath / self.context.resolved(self.soakkey, reltarget, 'diff').value
             filter = nullcontext if self.context.resolved(self.soakkey, reltarget, 'plain').value else partial(unsops, orig.suffix)
