@@ -108,6 +108,7 @@ class SoakConfig:
     parent = Context()
     with Repl(parent) as repl:
         repl('plain = false')
+    # TODO: Migrate some of these to plugin(s).
     for f in sops2arid, sopsget, readfile, processtemplate:
         parent[f.__name__,] = Function(f)
     parent['xml"',] = Function(xmlquote)
