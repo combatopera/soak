@@ -113,6 +113,7 @@ class SoakConfig:
         parent[f.__name__,] = Function(f)
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
+    parent['^',] = Text(*git.rev_parse.__show_toplevel().splitlines())
     del repl, f
 
     def __init__(self, configpath):
