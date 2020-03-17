@@ -32,7 +32,7 @@ import subprocess, sys, tempfile, yaml
 def nullcontext(x):
     yield x
 
-sops = bash.partial('-ic', 'sops -d "$@"', 'sops', start_new_session = True)
+sops = bash._ic.partial('sops -d "$@"', 'sops', start_new_session = True)
 
 @contextmanager
 def unsops(suffix, encstream):
@@ -139,7 +139,7 @@ class SoakConfig:
             orig = self.dirpath / self.context.resolved(self.soakkey, reltarget, 'diff').value
             filter = nullcontext if self.context.resolved(self.soakkey, reltarget, 'plain').value else partial(unsops, orig.suffix)
             with git.show.bg(f"master:./{orig}") as origstream, filter(origstream) as plainstream:
-                diff.print('-us', '--color=always', plainstream, self.dirpath / reltarget, check = False)
+                diff._us.print('--color=always', plainstream, self.dirpath / reltarget, check = False)
 
 def main_soak():
     parser = ArgumentParser()
