@@ -89,6 +89,10 @@ def blockliteral(context, indentresolvable, textresolvable):
     text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
     return Text('\n'.join(f"{indent if i else ''}{line}" for i, line in enumerate(text.splitlines())))
 
+def rootpath(context, *resolvables):
+    root, = git.rev_parse.__show_toplevel().splitlines()
+    return Text(str(Path(root, *(r.resolve(context).cat() for r in resolvables))))
+
 class Terminal:
 
     def __init__(self):
@@ -113,7 +117,7 @@ class SoakConfig:
         parent[f.__name__,] = Function(f)
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
-    parent['^',] = Text(*git.rev_parse.__show_toplevel().splitlines())
+    parent['^',] = Function(rootpath)
     del repl, f
 
     def __init__(self, configpath):
