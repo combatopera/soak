@@ -93,6 +93,10 @@ def rootpath(context, *resolvables):
     root, = git.rev_parse.__show_toplevel().splitlines()
     return Text(str(Path(root, *(r.resolve(context).cat() for r in resolvables))))
 
+def hereslash(context, *resolvables):
+    here = context.resolved('here').cat()
+    return Text(str(Path(here, *(r.resolve(context).cat() for r in resolvables))))
+
 class Terminal:
 
     def __init__(self):
@@ -118,6 +122,7 @@ class SoakConfig:
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
     parent['^',] = Function(rootpath)
+    parent['here/',] = Function(hereslash)
     del repl, f
 
     def __init__(self, configpath):
