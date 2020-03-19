@@ -121,8 +121,8 @@ class SoakConfig:
         parent[f.__name__,] = Function(f)
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
-    parent['^',] = Function(rootpath)
-    parent['here/',] = Function(hereslash)
+    parent['//',] = Function(rootpath)
+    parent['./',] = Function(hereslash)
     del repl, f
 
     def __init__(self, configpath):
