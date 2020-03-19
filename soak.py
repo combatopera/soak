@@ -82,7 +82,7 @@ def processtemplate(context, resolvable):
 
 def xmlquote(context, resolvable):
     from xml.sax.saxutils import escape
-    return Text(escape(resolvable.resolve(context).cat(), {'"': '&quot;', "'": '&apos;'})) # TODO: This is normally overkill.
+    return Text(escape(resolvable.resolve(context).cat()))
 
 def blockliteral(context, indentresolvable, textresolvable):
     indent = (indentresolvable.resolve(context).value - 2) * ' '
