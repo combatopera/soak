@@ -46,10 +46,8 @@ class SoakConfig:
         (self.dirpath / relpartial).rename(target)
         log(target)
 
-    def diff(self):
-        # TODO: Parallelise the expensive bits.
-        for reltarget in self.reltargets:
-            diff._us.print('--color=always', '-', self.dirpath / reltarget, input = self.context.resolved(self.soakkey, reltarget, 'diff').value, check = False)
+    def orig(self, reltarget):
+        return self.context.resolved(self.soakkey, reltarget, 'diff').value
 
 def main_soak():
     parser = ArgumentParser()
@@ -62,13 +60,17 @@ def main_soak():
         terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs))
         with ThreadPoolExecutor() as executor:
             futures = []
-            index = 0
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    futures.append(executor.submit(soakconfig.process, partial(terminal.log, index), reltarget))
-                    index += 1
+                    futures.append(executor.submit(soakconfig.process, partial(terminal.log, len(futures)), reltarget))
             for f in futures:
                 f.result()
     if config.d:
-        for soakconfig in soakconfigs:
-            soakconfig.diff()
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for soakconfig in soakconfigs:
+                for reltarget in soakconfig.reltargets:
+                    futures.append(executor.submit(soakconfig.orig, reltarget))
+            for soakconfig in soakconfigs:
+                for reltarget in soakconfig.reltargets:
+                    diff._us.print('--color=always', '-', soakconfig.dirpath / reltarget, input = futures.pop(0).result(), check = False)
