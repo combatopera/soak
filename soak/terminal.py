@@ -27,10 +27,11 @@ class Terminal:
         sys.stderr.write('\n' * height)
         tput.sc()
         self.lock = Lock()
+        self.height = height
 
-    def log(self, upcount, text, rev = False):
+    def log(self, index, text, rev = False):
         with self.lock:
-            tput.cuu(upcount)
+            tput.cuu(self.height - index)
             if rev:
                 tput.rev()
             print(text, file = sys.stderr)

@@ -59,14 +59,14 @@ def main_soak():
     parent = createparent()
     soakconfigs = [SoakConfig(parent, p) for p in Path('.').rglob('soak.arid')]
     if not config.n:
-        upcount = sum(len(sc.reltargets) for sc in soakconfigs)
-        terminal = Terminal(upcount)
+        terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs))
         with ThreadPoolExecutor() as executor:
             futures = []
+            index = 0
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    futures.append(executor.submit(soakconfig.process, partial(terminal.log, upcount), reltarget))
-                    upcount -= 1
+                    futures.append(executor.submit(soakconfig.process, partial(terminal.log, index), reltarget))
+                    index += 1
             for f in futures:
                 f.result()
     if config.d:
