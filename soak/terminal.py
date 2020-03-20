@@ -19,19 +19,21 @@ from lagoon import tput
 from threading import Lock
 import sys
 
+tput = tput.partial(stdout = sys.stderr)
+
 class Terminal:
 
     def __init__(self, height):
         sys.stderr.write('\n' * height)
-        tput.sc(stdout = sys.stderr)
+        tput.sc()
         self.lock = Lock()
 
     def log(self, upcount, text, rev = False):
         with self.lock:
-            tput.cuu(upcount, stdout = sys.stderr)
+            tput.cuu(upcount)
             if rev:
-                tput.rev(stdout = sys.stderr)
+                tput.rev()
             print(text, file = sys.stderr)
-            tput.sgr0(stdout = sys.stderr)
-            tput.rc(stdout = sys.stderr)
+            tput.sgr0()
+            tput.rc()
             sys.stderr.flush()
