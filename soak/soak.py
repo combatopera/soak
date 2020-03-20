@@ -15,29 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-from .context import createparent, sops
+from .context import createparent
 from .terminal import Terminal
 from argparse import ArgumentParser
 from aridity import Repl
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import contextmanager
 from functools import partial
-from lagoon import diff, git
+from lagoon import diff
 from pathlib import Path
-from shutil import copyfileobj
-import subprocess, tempfile
-
-@contextmanager
-def nullcontext(x):
-    yield x
-
-@contextmanager
-def unsops(suffix, encstream):
-    with tempfile.NamedTemporaryFile('w', suffix = suffix) as f:
-        copyfileobj(encstream, f)
-        f.flush()
-        with sops.bg(f.name, stderr = subprocess.DEVNULL) as decstream:
-            yield decstream
 
 class SoakConfig:
 
@@ -64,10 +49,7 @@ class SoakConfig:
     def diff(self):
         # TODO: Parallelise the expensive bits.
         for reltarget in self.reltargets:
-            orig = self.dirpath / self.context.resolved(self.soakkey, reltarget, 'diff').value
-            filter = nullcontext if self.context.resolved(self.soakkey, reltarget, 'plain').value else partial(unsops, orig.suffix)
-            with git.show.bg(f"master:./{orig}") as origstream, filter(origstream) as plainstream:
-                diff._us.print('--color=always', plainstream, self.dirpath / reltarget, check = False)
+            diff._us.print('--color=always', '-', self.dirpath / reltarget, input = self.context.resolved(self.soakkey, reltarget, 'diff').value, check = False)
 
 def main_soak():
     parser = ArgumentParser()
