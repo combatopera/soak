@@ -23,7 +23,7 @@ from aridimpl.model import Concat, Function, Text
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from functools import lru_cache, partial
-from lagoon import bash, diff, git, tput
+from lagoon import bash, diff, git
 from pathlib import Path
 from shutil import copyfileobj
 import subprocess, sys, tempfile, yaml
@@ -120,7 +120,7 @@ class SoakConfig:
     def process(self, log, reltarget):
         relpartial = f"{reltarget}.part"
         target = self.dirpath / reltarget
-        log(f"{tput.rev()}{target}")
+        log(target, rev = True)
         with Repl(self.context.createchild()) as repl:
             repl.printf("redirect %s", relpartial)
             repl.printf("< $(%s %s from)", self.soakkey, reltarget)

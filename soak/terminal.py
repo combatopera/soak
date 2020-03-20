@@ -26,9 +26,11 @@ class Terminal:
         tput.sc(stdout = sys.stderr)
         self.lock = Lock()
 
-    def log(self, upcount, text):
+    def log(self, upcount, text, rev = False):
         with self.lock:
             tput.cuu(upcount, stdout = sys.stderr)
+            if rev:
+                tput.rev(stdout = sys.stderr)
             print(text, file = sys.stderr)
             tput.sgr0(stdout = sys.stderr)
             tput.rc(stdout = sys.stderr)
