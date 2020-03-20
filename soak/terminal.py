@@ -21,7 +21,9 @@ import sys
 
 class Terminal:
 
-    def __init__(self):
+    def __init__(self, height):
+        sys.stderr.write('\n' * height)
+        tput.sc(stdout = sys.stderr)
         self.lock = Lock()
 
     def log(self, upcount, text):

@@ -144,9 +144,7 @@ def main_soak():
     soakconfigs = [SoakConfig(parent, p) for p in Path('.').rglob('soak.arid')]
     if not config.n:
         upcount = sum(len(sc.reltargets) for sc in soakconfigs)
-        sys.stderr.write('\n' * upcount)
-        tput.sc(stdout = sys.stderr)
-        terminal = Terminal()
+        terminal = Terminal(upcount)
         with ThreadPoolExecutor() as executor:
             futures = []
             for soakconfig in soakconfigs:
