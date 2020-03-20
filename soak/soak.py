@@ -15,24 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
+from .context import createparent, sops
 from .terminal import Terminal
 from argparse import ArgumentParser
-from aridity import Context, Repl
-from aridimpl.grammar import templateparser
-from aridimpl.model import Concat, Function, Text
+from aridity import Repl
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
-from functools import lru_cache, partial
-from lagoon import bash, diff, git
+from functools import partial
+from lagoon import diff, git
 from pathlib import Path
 from shutil import copyfileobj
-import subprocess, sys, tempfile, yaml
+import subprocess, tempfile
 
 @contextmanager
 def nullcontext(x):
     yield x
-
-sops = bash._ic.partial('sops -d "$@"', 'sops', start_new_session = True)
 
 @contextmanager
 def unsops(suffix, encstream):
@@ -41,69 +38,6 @@ def unsops(suffix, encstream):
         f.flush()
         with sops.bg(f.name, stderr = subprocess.DEVNULL) as decstream:
             yield decstream
-
-@lru_cache()
-def _unsopsimpl(path):
-    completed = sops(path, stderr = subprocess.PIPE, check = False)
-    if completed.returncode:
-        sys.stderr.write(completed.stderr)
-        completed.check_returncode()
-    return yaml.safe_load(completed.stdout)
-
-def _unsops(context, resolvable):
-    return _unsopsimpl(resolvable.resolve(context).cat())
-
-def sops2arid(context, resolvable):
-    def process(obj, *path):
-        try:
-            items = obj.items
-        except AttributeError:
-            entries.append((path, obj))
-            return
-        for key, value in items():
-            process(value, *path, key)
-    entries = []
-    process(_unsops(context, resolvable))
-    return Text(''.join(f"{' '.join(path)} = {value}\n" for path, value in entries))
-
-def sopsget(context, pathresolvable, *nameresolvables):
-    obj = _unsops(context, pathresolvable)
-    for r in nameresolvables:
-        obj = obj[r.resolve(context).cat()]
-    return Text(obj)
-
-def readfile(context, resolvable):
-    with open(resolvable.resolve(context).cat()) as f:
-        return Text(f.read())
-
-def processtemplate(context, resolvable):
-    with open(resolvable.resolve(context).cat()) as f:
-        return Text(Concat(templateparser(f.read())).resolve(context).cat()) # TODO: There should be an easier way.
-
-def xmlquote(context, resolvable):
-    from xml.sax.saxutils import escape
-    return Text(escape(resolvable.resolve(context).cat()))
-
-def blockliteral(context, indentresolvable, textresolvable):
-    indent = (indentresolvable.resolve(context).value - 2) * ' '
-    text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
-    return Text('\n'.join(f"{indent if i else ''}{line}" for i, line in enumerate(text.splitlines())))
-
-def rootpath(context, *resolvables):
-    root, = git.rev_parse.__show_toplevel().splitlines()
-    return Text(str(Path(root, *(r.resolve(context).cat() for r in resolvables))))
-
-def createparent():
-    parent = Context()
-    with Repl(parent) as repl:
-        repl('plain = false')
-    # TODO: Migrate some of these to plugin(s).
-    for f in sops2arid, sopsget, readfile, processtemplate:
-        parent[f.__name__,] = Function(f)
-    parent['xml"',] = Function(xmlquote)
-    parent['|',] = Function(blockliteral)
-    parent['//',] = Function(rootpath)
-    return parent
 
 class SoakConfig:
 
