@@ -26,15 +26,17 @@ import subprocess, sys, tempfile, yaml
 sops = bash._ic.partial('sops -d "$@"', 'sops', start_new_session = True)
 
 @lru_cache()
-def _unsopsimpl(path):
+def _unsopsimpl(path, unyaml):
+    if unyaml:
+        return yaml.safe_load(_unsopsimpl(path, False))
     completed = sops(path, stderr = subprocess.PIPE, check = False)
     if completed.returncode:
         sys.stderr.write(completed.stderr)
         completed.check_returncode()
-    return yaml.safe_load(completed.stdout)
+    return completed.stdout
 
 def _unsops(context, resolvable):
-    return _unsopsimpl(resolvable.resolve(context).cat())
+    return _unsopsimpl(resolvable.resolve(context).cat(), True)
 
 def sops2arid(context, resolvable):
     def process(obj, *path):
@@ -86,7 +88,7 @@ def unsops(context, resolvable):
     with tempfile.NamedTemporaryFile('w', suffix = resolvable.suffix) as f:
         f.write(resolvable.resolve(context).cat())
         f.flush()
-        return Text(sops(f.name, stderr = subprocess.DEVNULL))
+        return Text(_unsopsimpl(f.name, False))
 
 def createparent():
     parent = Context()
