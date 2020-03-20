@@ -106,9 +106,7 @@ class Terminal:
             tput.rc(stdout = sys.stderr)
             sys.stderr.flush()
 
-class SoakConfig:
-
-    soakkey = 'soak'
+def createparent():
     parent = Context()
     with Repl(parent) as repl:
         repl('plain = false')
@@ -118,10 +116,14 @@ class SoakConfig:
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
     parent['//',] = Function(rootpath)
-    del repl, f
+    return parent
 
-    def __init__(self, configpath):
-        self.context = self.parent.createchild()
+class SoakConfig:
+
+    soakkey = 'soak'
+
+    def __init__(self, parent, configpath):
+        self.context = parent.createchild()
         with Repl(self.context) as repl:
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
@@ -151,7 +153,8 @@ def main_soak():
     parser.add_argument('-n', action = 'store_true')
     parser.add_argument('-d', action = 'store_true')
     config = parser.parse_args()
-    soakconfigs = [SoakConfig(p) for p in Path('.').rglob('soak.arid')]
+    parent = createparent()
+    soakconfigs = [SoakConfig(parent, p) for p in Path('.').rglob('soak.arid')]
     if not config.n:
         upcount = sum(len(sc.reltargets) for sc in soakconfigs)
         sys.stderr.write('\n' * upcount)
