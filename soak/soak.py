@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
+from .terminal import Terminal
 from argparse import ArgumentParser
 from aridity import Context, Repl
 from aridimpl.grammar import templateparser
@@ -25,7 +26,6 @@ from functools import lru_cache, partial
 from lagoon import bash, diff, git, tput
 from pathlib import Path
 from shutil import copyfileobj
-from threading import Lock
 import subprocess, sys, tempfile, yaml
 
 @contextmanager
@@ -92,19 +92,6 @@ def blockliteral(context, indentresolvable, textresolvable):
 def rootpath(context, *resolvables):
     root, = git.rev_parse.__show_toplevel().splitlines()
     return Text(str(Path(root, *(r.resolve(context).cat() for r in resolvables))))
-
-class Terminal:
-
-    def __init__(self):
-        self.lock = Lock()
-
-    def log(self, upcount, text):
-        with self.lock:
-            tput.cuu(upcount, stdout = sys.stderr)
-            print(text, file = sys.stderr)
-            tput.sgr0(stdout = sys.stderr)
-            tput.rc(stdout = sys.stderr)
-            sys.stderr.flush()
 
 def createparent():
     parent = Context()
