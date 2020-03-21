@@ -16,8 +16,7 @@
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
 from aridity import Context, Repl
-from aridimpl.grammar import templateparser
-from aridimpl.model import Concat, Function, Text
+from aridimpl.model import Function, Text
 from functools import lru_cache
 from lagoon import bash, git
 from pathlib import Path
@@ -57,14 +56,6 @@ def sopsget(context, pathresolvable, *nameresolvables):
         obj = obj[r.resolve(context).cat()]
     return Text(obj)
 
-def readfile(context, resolvable):
-    with open(resolvable.resolve(context).cat()) as f:
-        return Text(f.read())
-
-def processtemplate(context, resolvable):
-    with open(resolvable.resolve(context).cat()) as f:
-        return Text(Concat(templateparser(f.read())).resolve(context).cat()) # TODO: There should be an easier way.
-
 def xmlquote(context, resolvable):
     from xml.sax.saxutils import escape
     return Text(escape(resolvable.resolve(context).cat()))
@@ -95,7 +86,7 @@ def createparent():
     with Repl(parent) as repl:
         repl('plain = false')
     # TODO: Migrate some of these to plugin(s).
-    for f in sops2arid, sopsget, readfile, processtemplate, master, unsops:
+    for f in sops2arid, sopsget, master, unsops:
         parent[f.__name__,] = Function(f)
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
