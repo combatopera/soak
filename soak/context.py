@@ -79,7 +79,7 @@ def rootpath(context, *resolvables):
     return Text(str(Path(root, *(r.resolve(context).cat() for r in resolvables))))
 
 def master(context, resolvable):
-    path = Path(context.resolved('cwd').value, resolvable.resolve(context).cat())
+    path = Path(context.resolved('cwd').cat(), resolvable.resolve(context).cat())
     obj = Text(git.show(f"master:./{path}"))
     obj.suffix = path.suffix # Bit of a hack.
     return obj
