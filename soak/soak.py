@@ -47,7 +47,7 @@ class SoakConfig:
         (self.dirpath / relpartial).rename(target)
         log(target)
 
-    def orig(self, reltarget):
+    def origtext(self, reltarget):
         return self.context.resolved(self.soakkey, reltarget, 'diff').value
 
     def diff(self, origtext, reltarget):
@@ -73,6 +73,6 @@ def main_soak():
             diffs = []
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    diffs.append(partial(lambda soakconfig, origfuture, reltarget: soakconfig.diff(origfuture.result(), reltarget),
-                            soakconfig, executor.submit(soakconfig.orig, reltarget), reltarget))
+                    diffs.append(partial(lambda soakconfig, origtextfuture, reltarget: soakconfig.diff(origtextfuture.result(), reltarget),
+                            soakconfig, executor.submit(soakconfig.origtext, reltarget), reltarget))
             invokeall(diffs)
