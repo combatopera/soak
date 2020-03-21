@@ -34,11 +34,11 @@ class SoakConfig:
         with Repl(self.context) as repl:
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
-        self.reltargets = self.context.resolved(self.soakkey).resolvables.keys()
+        self.reltargets = [Path(rt) for rt in self.context.resolved(self.soakkey).resolvables.keys()]
         self.dirpath = configpath.parent
 
     def process(self, log, reltarget):
-        relpartial = f"{reltarget}.part"
+        relpartial = reltarget.with_name(f"{reltarget.name}.part")
         target = self.dirpath / reltarget
         log(target, rev = True)
         with Repl(self.context.createchild()) as repl:
