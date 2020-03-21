@@ -21,6 +21,7 @@ requires +=
     aridity
     lagoon
     PyYAML
+    splut
 years += 2020
 author = Andrzej Cichocki
 executable = true

@@ -23,6 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from lagoon import diff
 from pathlib import Path
+from splut import invokeall
 
 class SoakConfig:
 
@@ -63,8 +64,7 @@ def main_soak():
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
                     futures.append(executor.submit(soakconfig.process, partial(terminal.log, len(futures)), reltarget))
-            for f in futures:
-                f.result()
+            invokeall([f.result for f in futures])
     if config.d:
         with ThreadPoolExecutor() as executor:
             futures = []
