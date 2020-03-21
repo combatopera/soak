@@ -15,3 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
+from concurrent.futures import ThreadPoolExecutor
+from os import cpu_count
+
+def cpuexecutor():
+    return ThreadPoolExecutor(cpu_count())

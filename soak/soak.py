@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
+from . import cpuexecutor
 from .context import createparent
 from .terminal import Terminal
 from argparse import ArgumentParser
 from aridity import Repl
-from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from lagoon import diff
 from pathlib import Path
@@ -62,14 +62,14 @@ def main_soak():
     soakconfigs = [SoakConfig(parent, p) for p in Path('.').rglob('soak.arid')]
     if not config.n:
         terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs))
-        with ThreadPoolExecutor() as executor:
+        with cpuexecutor() as executor:
             results = []
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
                     results.append(executor.submit(soakconfig.process, partial(terminal.log, len(results)), reltarget).result)
             invokeall(results)
     if config.d:
-        with ThreadPoolExecutor() as executor:
+        with cpuexecutor() as executor:
             diffs = []
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
