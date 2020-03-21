@@ -29,11 +29,13 @@ class Terminal:
         self.lock = Lock()
         self.height = height
 
-    def log(self, index, text, rev = False):
+    def log(self, index, text, rev = False, dark = False):
         with self.lock:
             tput.cuu(self.height - index)
             if rev:
                 tput.rev()
+            if dark:
+                tput.setaf(0)
             print(text, file = sys.stderr)
             tput.sgr0()
             tput.rc()
