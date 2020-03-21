@@ -70,12 +70,9 @@ def main_soak():
             invokeall([f.result for f in futures])
     if config.d:
         with ThreadPoolExecutor() as executor:
-            futures = []
-            for soakconfig in soakconfigs:
-                for reltarget in soakconfig.reltargets:
-                    futures.append(executor.submit(soakconfig.orig, reltarget))
             diffs = []
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    diffs.append(partial(soakconfig.diff, futures.pop(0), reltarget))
+                    f = executor.submit(soakconfig.orig, reltarget)
+                    diffs.append(partial(soakconfig.diff, f, reltarget))
             invokeall(diffs)
