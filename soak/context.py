@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-from aridity import Context, Repl
+from aridity import Context
 from aridimpl.model import Function, Text
 from functools import lru_cache
 from lagoon import bash, git
@@ -83,8 +83,6 @@ def unsops(context, resolvable):
 
 def createparent():
     parent = Context()
-    with Repl(parent) as repl:
-        repl('plain = false')
     # TODO: Migrate some of these to plugin(s).
     for f in sops2arid, sopsget, master, unsops:
         parent[f.__name__,] = Function(f)
