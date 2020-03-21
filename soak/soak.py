@@ -63,11 +63,11 @@ def main_soak():
     if not config.n:
         terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs))
         with ThreadPoolExecutor() as executor:
-            futures = []
+            results = []
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    futures.append(executor.submit(soakconfig.process, partial(terminal.log, len(futures)), reltarget))
-            invokeall([f.result for f in futures])
+                    results.append(executor.submit(soakconfig.process, partial(terminal.log, len(results)), reltarget).result)
+            invokeall(results)
     if config.d:
         with ThreadPoolExecutor() as executor:
             diffs = []
