@@ -66,8 +66,9 @@ def main_soak():
             results = []
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    results.append(executor.submit(soakconfig.process, partial(terminal.log, len(results)), reltarget).result)
-                    terminal.log(len(results) - 1, soakconfig.dirpath / reltarget, dark = True)
+                    log = partial(terminal.log, len(results))
+                    log(soakconfig.dirpath / reltarget, dark = True)
+                    results.append(executor.submit(soakconfig.process, log, reltarget).result)
             invokeall(results)
     if config.d:
         with cpuexecutor() as executor:
