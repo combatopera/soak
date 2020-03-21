@@ -16,45 +16,18 @@
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
 from aridity import Context
-from aridimpl.model import Function, Text
-from functools import lru_cache
-from lagoon import bash, git
+from aridimpl.model import Directive, Function, Text
+from importlib import import_module
+from lagoon import git
 from pathlib import Path
-import subprocess, sys, tempfile, yaml
+import sys, yaml
 
-sops = bash._ic.partial('sops -d "$@"', 'sops', start_new_session = True)
+toplevel, = git.rev_parse.__show_toplevel().splitlines()
+sys.path.append(toplevel) # XXX: Or prepend?
 
-@lru_cache()
-def _unsopsimpl(path, unyaml):
-    if unyaml:
-        return yaml.safe_load(_unsopsimpl(path, False))
-    completed = sops(path, stderr = subprocess.PIPE, check = False)
-    if completed.returncode:
-        sys.stderr.write(completed.stderr)
-        completed.check_returncode()
-    return completed.stdout
-
-def _unsops(context, resolvable):
-    return _unsopsimpl(resolvable.resolve(context).cat(), True)
-
-def sops2arid(context, resolvable):
-    def process(obj, *path):
-        try:
-            items = obj.items
-        except AttributeError:
-            entries.append((path, obj))
-            return
-        for key, value in items():
-            process(value, *path, key)
-    entries = []
-    process(_unsops(context, resolvable))
-    return Text(''.join(f"{' '.join(path)} = {value}\n" for path, value in entries))
-
-def sopsget(context, pathresolvable, *nameresolvables):
-    obj = _unsops(context, pathresolvable)
-    for r in nameresolvables:
-        obj = obj[r.resolve(context).cat()]
-    return Text(obj)
+def plugin(prefix, phrase, context):
+    modulename, globalname = phrase.resolve(context, aslist = True)
+    getattr(import_module(modulename.cat()), globalname.cat())(context)
 
 def xmlquote(context, resolvable):
     from xml.sax.saxutils import escape
@@ -66,26 +39,11 @@ def blockliteral(context, indentresolvable, textresolvable):
     return Text('\n'.join(f"{indent if i else ''}{line}" for i, line in enumerate(text.splitlines())))
 
 def rootpath(context, *resolvables):
-    root, = git.rev_parse.__show_toplevel().splitlines()
-    return Text(str(Path(root, *(r.resolve(context).cat() for r in resolvables))))
-
-def master(context, resolvable):
-    path = Path(context.resolved('cwd').cat(), resolvable.resolve(context).cat())
-    obj = Text(git.show(f"master:./{path}"))
-    obj.suffix = path.suffix # Bit of a hack.
-    return obj
-
-def unsops(context, resolvable):
-    with tempfile.NamedTemporaryFile('w', suffix = resolvable.suffix) as f:
-        f.write(resolvable.resolve(context).cat())
-        f.flush()
-        return Text(_unsopsimpl(f.name, False))
+    return Text(str(Path(toplevel, *(r.resolve(context).cat() for r in resolvables))))
 
 def createparent():
     parent = Context()
-    # TODO: Migrate some of these to plugin(s).
-    for f in sops2arid, sopsget, master, unsops:
-        parent[f.__name__,] = Function(f)
+    parent['plugin',] = Directive(plugin)
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
     parent['//',] = Function(rootpath)
