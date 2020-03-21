@@ -50,8 +50,8 @@ class SoakConfig:
     def orig(self, reltarget):
         return self.context.resolved(self.soakkey, reltarget, 'diff').value
 
-    def diff(self, origfuture, reltarget):
-        diff._us.print('--color=always', '-', self.dirpath / reltarget, input = origfuture.result(), check = False)
+    def diff(self, origtext, reltarget):
+        diff._us.print('--color=always', '-', self.dirpath / reltarget, input = origtext, check = False)
 
 def main_soak():
     parser = ArgumentParser()
@@ -73,6 +73,6 @@ def main_soak():
             diffs = []
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    f = executor.submit(soakconfig.orig, reltarget)
-                    diffs.append(partial(soakconfig.diff, f, reltarget))
+                    diffs.append(partial(lambda soakconfig, origfuture, reltarget: soakconfig.diff(origfuture.result(), reltarget),
+                            soakconfig, executor.submit(soakconfig.orig, reltarget), reltarget))
             invokeall(diffs)
