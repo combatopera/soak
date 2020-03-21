@@ -48,7 +48,7 @@ class SoakConfig:
         log(target)
 
     def origtext(self, reltarget):
-        return self.context.resolved(self.soakkey, reltarget, 'diff').cat()
+        return self.context.resolved(self.soakkey, str(reltarget), 'diff').cat()
 
     def diff(self, origtext, reltarget):
         diff._us.print('--color=always', '-', self.dirpath / reltarget, input = origtext, check = False)
