@@ -47,4 +47,4 @@ class LogFile:
 
     def log(self, index, text, rev = False, dark = False):
         if not dark:
-            print('Start:' if rev else 'Done:', text, file = sys.stderr)
+            print('Damp:' if rev else 'Soaked:', text, file = sys.stderr)
