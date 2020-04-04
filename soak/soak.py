@@ -17,13 +17,14 @@
 
 from . import cpuexecutor
 from .context import createparent
-from .terminal import Terminal
+from .terminal import LogFile, Terminal
 from argparse import ArgumentParser
 from aridity import Repl
 from functools import partial
 from lagoon import diff
 from pathlib import Path
 from splut import invokeall
+import os
 
 class SoakConfig:
 
@@ -61,7 +62,7 @@ def main_soak():
     parent = createparent()
     soakconfigs = [SoakConfig(parent, p) for p in Path('.').rglob('soak.arid')]
     if not config.n:
-        terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs))
+        terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs)) if 'TERM' in os.environ else LogFile
         with cpuexecutor() as executor:
             results = []
             for soakconfig in soakconfigs:

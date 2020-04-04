@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
+from diapyr.util import singleton
 from lagoon import tput
 from threading import Lock
 import sys
@@ -40,3 +41,10 @@ class Terminal:
             tput.sgr0()
             tput.rc()
             sys.stderr.flush()
+
+@singleton
+class LogFile:
+
+    def log(self, index, text, rev = False, dark = False):
+        if not dark:
+            print('Start:' if rev else 'Done:', text, file = sys.stderr)
