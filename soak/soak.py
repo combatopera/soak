@@ -44,7 +44,7 @@ class SoakConfig:
         log(target, rev = True)
         with Repl(self.context.createchild()) as repl:
             repl.printf("redirect %s", relpartial)
-            repl.printf("< $(%s %s from)", self.soakkey, reltarget)
+            repl.printf("< $(%s %s from)", self.soakkey, reltarget) # TODO: Also support making binaries e.g. a ZIP.
         (self.dirpath / relpartial).rename(target)
         log(target)
 
