@@ -42,9 +42,11 @@ class SoakConfig:
         relpartial = reltarget.with_name(f"{reltarget.name}.part")
         target = self.dirpath / reltarget
         log(target, rev = True)
-        with Repl(self.context.createchild()) as repl:
-            repl.printf("redirect %s", relpartial)
-            repl.printf("< $(%s %s from)", self.soakkey, reltarget) # TODO: Also support making binaries e.g. a ZIP.
+        c = self.context.createchild()
+        with Repl(c) as repl:
+            repl.printf("data = $processtemplate$/($(cwd) $(%s %s from))", self.soakkey, reltarget)
+        with (self.dirpath / relpartial).open('w') as f:
+            f.write(c.resolved('data').cat())
         (self.dirpath / relpartial).rename(target)
         log(target)
 
