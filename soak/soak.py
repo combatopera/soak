@@ -60,6 +60,7 @@ def main_soak():
 
 def soak(config, root):
     toplevel, = git.rev_parse.__show_toplevel(cwd = root).splitlines()
+    # FIXME LATER: Avoid modifying global state (when called from tests).
     sys.path.append(toplevel) # XXX: Or prepend?
     parent = createparent(toplevel)
     soakconfigs = [SoakConfig(parent, p) for p in root.rglob('soak.arid')]
