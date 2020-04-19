@@ -17,13 +17,10 @@
 
 from aridity import Context, Repl
 from aridimpl.model import Directive, Function, Text
+from functools import partial
 from importlib import import_module
-from lagoon import git
 from pathlib import Path
-import sys, yaml
-
-toplevel, = git.rev_parse.__show_toplevel().splitlines()
-sys.path.append(toplevel) # XXX: Or prepend?
+import yaml
 
 def plugin(prefix, phrase, context):
     modulename, globalname = phrase.resolve(context, aslist = True)
@@ -38,15 +35,15 @@ def blockliteral(context, indentresolvable, textresolvable):
     text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
     return Text('\n'.join(f"{indent if i else ''}{line}" for i, line in enumerate(text.splitlines())))
 
-def rootpath(context, *resolvables):
+def rootpath(toplevel, context, *resolvables):
     return Text(str(Path(toplevel, *(r.resolve(context).cat() for r in resolvables))))
 
-def createparent():
+def createparent(toplevel):
     parent = Context()
     parent['plugin',] = Directive(plugin)
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
-    parent['//',] = Function(rootpath)
+    parent['//',] = Function(partial(rootpath, toplevel))
     with Repl(parent) as repl:
         repl.printf("data = $processtemplate$/($(cwd) $(from))")
     return parent

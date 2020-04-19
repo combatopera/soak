@@ -21,10 +21,10 @@ from .terminal import LogFile, Terminal
 from argparse import ArgumentParser
 from aridity import Repl
 from functools import partial
-from lagoon import diff
+from lagoon import diff, git
 from pathlib import Path
 from splut import invokeall
-import os
+import os, sys
 
 class SoakConfig:
 
@@ -60,7 +60,9 @@ def main_soak():
     soak(parser.parse_args(), Path('.'))
 
 def soak(config, root):
-    parent = createparent()
+    toplevel, = git.rev_parse.__show_toplevel().splitlines()
+    sys.path.append(toplevel) # XXX: Or prepend?
+    parent = createparent(toplevel)
     soakconfigs = [SoakConfig(parent, p) for p in root.rglob('soak.arid')]
     if not config.n:
         terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs)) if 'TERM' in os.environ else LogFile
