@@ -16,7 +16,7 @@
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
 from .soak import soak
-from lagoon import git
+from lagoon import git, unzip
 from pathlib import Path
 from pkg_resources import resource_filename
 from shutil import copytree
@@ -39,3 +39,4 @@ class TestConformance(TestCase):
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))
             with (conformance / 'readme.txt').open() as f:
                 self.assertEqual('Bad example.', f.read())
+            self.assertTrue(' testing: mylib.py ' in unzip._t(conformance / 'mylib.whl'))

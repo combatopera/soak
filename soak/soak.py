@@ -42,8 +42,7 @@ class SoakConfig:
         relpartial = reltarget.with_name(f"{reltarget.name}.part")
         target = self.dirpath / reltarget
         log(target, rev = True)
-        with (self.dirpath / relpartial).open('w') as f:
-            f.write(self.context.resolved(self.soakkey, str(reltarget), 'data').cat())
+        self.context.resolved(self.soakkey, str(reltarget), 'data').writeout(self.dirpath / relpartial)
         (self.dirpath / relpartial).rename(target)
         log(target)
 
