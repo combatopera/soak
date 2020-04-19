@@ -58,9 +58,11 @@ def main_soak():
     parser = ArgumentParser()
     parser.add_argument('-n', action = 'store_true')
     parser.add_argument('-d', action = 'store_true')
-    config = parser.parse_args()
+    soak(parser.parse_args(), Path('.'))
+
+def soak(config, root):
     parent = createparent()
-    soakconfigs = [SoakConfig(parent, p) for p in Path('.').rglob('soak.arid')]
+    soakconfigs = [SoakConfig(parent, p) for p in root.rglob('soak.arid')]
     if not config.n:
         terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs)) if 'TERM' in os.environ else LogFile
         with cpuexecutor() as executor:
