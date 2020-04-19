@@ -45,5 +45,5 @@ def createparent(toplevel):
     parent['|',] = Function(blockliteral)
     parent['//',] = Function(partial(rootpath, toplevel))
     with Repl(parent) as repl:
-        repl.printf("data = $processtemplate$/($(cwd) $(from))")
+        repl.printf("data = $processtemplate$/($(cwd) $(from))") # XXX: Too easy to accidentally override?
     return parent
