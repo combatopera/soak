@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-from aridity import Context
+from aridity import Context, Repl
 from aridimpl.model import Directive, Function, Text
 from importlib import import_module
 from lagoon import git
@@ -47,4 +47,6 @@ def createparent():
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
     parent['//',] = Function(rootpath)
+    with Repl(parent) as repl:
+        repl.printf("data = $processtemplate$/($(cwd) $(from))")
     return parent

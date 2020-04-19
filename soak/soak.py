@@ -33,7 +33,6 @@ class SoakConfig:
     def __init__(self, parent, configpath):
         self.context = parent.createchild()
         with Repl(self.context) as repl:
-            repl.printf("data = $processtemplate$/($(cwd) $(from))")
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
         self.reltargets = [Path(rt) for rt in self.context.resolved(self.soakkey).resolvables.keys()]
