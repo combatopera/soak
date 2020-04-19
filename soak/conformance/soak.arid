@@ -15,7 +15,9 @@
 : You should have received a copy of the GNU General Public License
 : along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-soak conf.json from = conf.json.aridt
+soak
+    conf.json from = conf.json.aridt
+    readme.txt data = Bad example.
 mydata = hello there
 : XXX: Shouldn't quote be per-target?
 " = $(jsonquote)

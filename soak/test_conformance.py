@@ -35,3 +35,5 @@ class TestConformance(TestCase):
             soak(SimpleNamespace(n = None, d = None), conformance)
             with (conformance / 'conf.json').open() as f:
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))
+            with (conformance / 'readme.txt').open() as f:
+                self.assertEqual('Bad example.', f.read())
