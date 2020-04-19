@@ -16,6 +16,7 @@
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
 from .soak import soak
+from lagoon import git
 from pathlib import Path
 from pkg_resources import resource_filename
 from shutil import copytree
@@ -32,6 +33,7 @@ class TestConformance(TestCase):
             conformance = Path(tempdir, source.name)
             # TODO LATER: Ideally do not copy git-ignored files.
             copytree(source, conformance)
+            git.init.print(conformance)
             soak(SimpleNamespace(n = None, d = None), conformance)
             with (conformance / 'conf.json').open() as f:
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))
