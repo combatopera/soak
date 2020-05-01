@@ -20,11 +20,12 @@ from aridimpl.model import Directive, Function, Text
 from functools import partial
 from importlib import import_module
 from pathlib import Path
-import yaml
+import os, yaml
 
-def plugin(prefix, phrase, context):
+def plugin(toplevel, prefix, phrase, context):
     modulename, globalname = phrase.resolve(context, aslist = True)
-    getattr(import_module(modulename.cat()), globalname.cat())(context)
+    package = str(Path(context.resolved('here').cat()).relative_to(toplevel)).replace(os.sep, '.')
+    getattr(import_module(modulename.cat(), package), globalname.cat())(context)
 
 def xmlquote(context, resolvable):
     from xml.sax.saxutils import escape
@@ -40,7 +41,7 @@ def rootpath(toplevel, context, *resolvables):
 
 def createparent(toplevel):
     parent = Context()
-    parent['plugin',] = Directive(plugin)
+    parent['plugin',] = Directive(partial(plugin, toplevel))
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
     parent['//',] = Function(partial(rootpath, toplevel))
