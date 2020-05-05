@@ -26,20 +26,22 @@ class Terminal:
 
     def __init__(self, height):
         sys.stderr.write('\n' * height)
-        tput.sc()
         self.lock = Lock()
         self.height = height
 
     def log(self, index, text, rev = False, dark = False):
+        dy = self.height - index
         with self.lock:
-            tput.cuu(self.height - index)
+            tput.cuu(dy)
             if rev:
                 tput.rev()
             if dark:
                 tput.setaf(0)
             print(text, file = sys.stderr)
             tput.sgr0()
-            tput.rc()
+            dy -= 1
+            if dy:
+                tput.cud(dy)
             sys.stderr.flush()
 
 @singleton
