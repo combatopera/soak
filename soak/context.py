@@ -24,7 +24,7 @@ import os, yaml
 
 def plugin(toplevel, prefix, phrase, context):
     modulename, globalname = phrase.resolve(context, aslist = True)
-    package = str(Path(context.resolved('here').cat()).relative_to(toplevel)).replace(os.sep, '.')
+    package = str(Path(context.resolved('here').cat()).resolve().relative_to(toplevel)).replace(os.sep, '.')
     getattr(import_module(modulename.cat(), package), globalname.cat())(context)
 
 def xmlquote(context, resolvable):
