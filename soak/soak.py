@@ -59,6 +59,7 @@ def main_soak():
     soak(parser.parse_args(), Path('.'))
 
 def soak(config, root):
+    # FIXME: The toplevel should be lazy like everything else.
     toplevel, = git.rev_parse.__show_toplevel(cwd = root).splitlines()
     # FIXME LATER: Avoid modifying global state (when called from tests).
     sys.path.append(toplevel) # XXX: Or prepend?
