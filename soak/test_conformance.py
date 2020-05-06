@@ -23,7 +23,7 @@ from shutil import copytree
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest import TestCase
-import json
+import json, yaml
 
 class TestConformance(TestCase):
 
@@ -41,9 +41,11 @@ class TestConformance(TestCase):
                 self.assertEqual('Bad example.', f.read())
             self.assertTrue(' testing: mylib.py ' in unzip._t(conformance / 'mylib.whl'))
             with (conformance / 'info.yaml').open() as f:
+                actual = f.read()
                 self.assertEqual('''root:
     x:
         y: |
             first line
             second line
-''', f.read())
+''', actual)
+                self.assertEqual('first line\nsecond line\n', yaml.safe_load(actual)['root']['x']['y'])
