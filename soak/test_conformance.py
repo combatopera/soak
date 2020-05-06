@@ -34,7 +34,7 @@ class TestConformance(TestCase):
             # TODO LATER: Ideally do not copy git-ignored files.
             copytree(source, conformance)
             git.init.print(conformance)
-            soak(SimpleNamespace(n = None, d = None), conformance)
+            soak(SimpleNamespace(n = None, d = None, v = None), conformance)
             with (conformance / 'conf.json').open() as f:
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))
             with (conformance / 'readme.txt').open() as f:
