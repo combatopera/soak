@@ -24,7 +24,7 @@ from functools import partial
 from lagoon import diff, git
 from pathlib import Path
 from splut import invokeall
-import os, sys
+import logging, os, sys
 
 class SoakConfig:
 
@@ -56,9 +56,11 @@ def main_soak():
     parser = ArgumentParser()
     parser.add_argument('-n', action = 'store_true')
     parser.add_argument('-d', action = 'store_true')
+    parser.add_argument('-v', action = 'store_true')
     soak(parser.parse_args(), Path('.'))
 
 def soak(config, root):
+    logging.basicConfig(format = "[%(levelname)s] %(message)s", level = logging.DEBUG if config.v else logging.INFO)
     # FIXME: The toplevel should be lazy like everything else.
     toplevel, = git.rev_parse.__show_toplevel(cwd = root).splitlines()
     # FIXME LATER: Avoid modifying global state (when called from tests).
