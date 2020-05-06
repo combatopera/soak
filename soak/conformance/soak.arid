@@ -20,6 +20,11 @@ soak
     conf.json from = conf.json.aridt
     readme.txt data = Bad example.
     mylib.whl data = $bdist_wheel(mylib)
+    info.yaml
+        from = info.yaml.aridt
+        block = $.(first line
+second line
+)
 mydata = hello there
 : XXX: Shouldn't quote be per-target?
 " = $(jsonquote)

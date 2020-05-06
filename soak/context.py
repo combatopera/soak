@@ -31,10 +31,10 @@ def xmlquote(context, resolvable):
     from xml.sax.saxutils import escape
     return Text(escape(resolvable.resolve(context).cat()))
 
-def blockliteral(context, indentresolvable, textresolvable):
-    indent = (indentresolvable.resolve(context).value - 2) * ' '
+def blockliteral(context, textresolvable):
+    indent = f"{context.resolved('indent').value}{context.resolved('indentunit').value}"
     text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
-    return Text('\n'.join(f"{indent if i else ''}{line}" for i, line in enumerate(text.splitlines())))
+    return Text('\n'.join(f"{indent if i else ''}{line[2 if i else 0:]}" for i, line in enumerate(text.splitlines())))
 
 def rootpath(toplevel, context, *resolvables):
     return Text(str(Path(toplevel, *(r.resolve(context).cat() for r in resolvables))))
@@ -47,4 +47,5 @@ def createparent(toplevel):
     parent['//',] = Function(partial(rootpath, toplevel))
     with Repl(parent) as repl:
         repl('data = $processtemplate$(from)') # XXX: Too easy to accidentally override?
+        repl.printf("indentunit = %s", 4 * ' ')
     return parent

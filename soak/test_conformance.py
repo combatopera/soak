@@ -40,3 +40,10 @@ class TestConformance(TestCase):
             with (conformance / 'readme.txt').open() as f:
                 self.assertEqual('Bad example.', f.read())
             self.assertTrue(' testing: mylib.py ' in unzip._t(conformance / 'mylib.whl'))
+            with (conformance / 'info.yaml').open() as f:
+                self.assertEqual('''root:
+    x:
+        y: |
+            first line
+            second line
+''', f.read())
