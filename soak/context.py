@@ -41,7 +41,7 @@ def blockliteral(context, textresolvable):
     if not lines:
         return Text(header)
     if '...' == lines[-1]:
-        lines.pop()
+        lines.pop() # XXX: Could this result in no remaining lines?
     indentunit = context.resolved('indentunit').cat()
     m = singledigit.search(header)
     if m is None:
