@@ -25,7 +25,6 @@ import os, re, yaml
 singledigit = re.compile('[0-9]')
 zeroormorespaces = re.compile(' *')
 linefeed = '\n'
-pyyamlindent = 2 # XXX: Can we detect or pass in?
 
 def plugin(toplevel, prefix, phrase, context):
     modulename, globalname = phrase.resolve(context, aslist = True)
@@ -44,9 +43,14 @@ def blockliteral(context, textresolvable):
     if '...' == lines[-1]:
         lines.pop()
     indentunit = context.resolved('indentunit').cat()
-    fullindent = f"{context.resolved('indent').cat()}{indentunit}"
-    header = singledigit.sub(lambda m: str(len(zeroormorespaces.fullmatch(indentunit).group()) + int(m.group()) - pyyamlindent), header, 1)
-    return Text(f"""{header}\n{linefeed.join(f"{fullindent}{line[pyyamlindent:]}" for line in lines)}""")
+    m = singledigit.search(header)
+    if m is None:
+        pyyamlindent = len(zeroormorespaces.match(lines[0]).group())
+    else:
+        pyyamlindent = int(m.group())
+        header = f"{header[:m.start()]}{len(zeroormorespaces.fullmatch(indentunit).group())}{header[m.end():]}"
+    contextindent = context.resolved('indent').cat()
+    return Text(f"""{header}\n{linefeed.join(f"{contextindent}{indentunit}{line[pyyamlindent:]}" for line in lines)}""")
 
 def rootpath(toplevel, context, *resolvables):
     return Text(str(Path(toplevel, *(r.resolve(context).cat() for r in resolvables))))
