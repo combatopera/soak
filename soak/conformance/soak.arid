@@ -25,6 +25,9 @@ soak
         block = $.(first line
 second line
 )
+        noeol = $.(1st line
+2nd line)
+        empty = $.()
 mydata = hello there
 : XXX: Shouldn't quote be per-target?
 " = $(jsonquote)

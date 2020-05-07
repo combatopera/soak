@@ -44,8 +44,14 @@ class TestConformance(TestCase):
                 actual = f.read()
                 self.assertEqual('''root:
     x:
-        y: |
+        block: |
             first line
             second line
+    noeol: |-
+        1st line
+        2nd line
+    empty: ""
 ''', actual)
-                self.assertEqual('first line\nsecond line\n', yaml.safe_load(actual)['root']['x']['y'])
+                self.assertEqual('first line\nsecond line\n', yaml.safe_load(actual)['root']['x']['block'])
+                self.assertEqual('1st line\n2nd line', yaml.safe_load(actual)['root']['noeol'])
+                self.assertEqual('', yaml.safe_load(actual)['root']['empty'])

@@ -1,3 +1,5 @@
 root:
     x:
-        y: $|$(block)
+        block: $|$(block)
+    noeol: $|$(noeol)
+    empty: $|$(empty)
