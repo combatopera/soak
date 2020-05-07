@@ -40,9 +40,8 @@ class TestConformance(TestCase):
             with (conformance / 'readme.txt').open() as f:
                 self.assertEqual('Bad example.', f.read())
             self.assertTrue(' testing: mylib.py ' in unzip._t(conformance / 'mylib.whl'))
-            with (conformance / 'info.yaml').open() as f:
-                actual = f.read()
-                self.assertEqual('''root:
+            infotext = (conformance / 'info.yaml').read_text()
+            self.assertEqual('''root:
     x:
         block: |
             first line
@@ -53,8 +52,9 @@ class TestConformance(TestCase):
     empty: ""
     noeol1: |-
         only line
-''', actual)
-                self.assertEqual('first line\nsecond line\n', yaml.safe_load(actual)['root']['x']['block'])
-                self.assertEqual('1st line\n2nd line', yaml.safe_load(actual)['root']['noeol'])
-                self.assertEqual('', yaml.safe_load(actual)['root']['empty'])
-                self.assertEqual('only line', yaml.safe_load(actual)['root']['noeol1'])
+''', infotext)
+            info = yaml.safe_load(infotext)
+            self.assertEqual('first line\nsecond line\n', info['root']['x']['block'])
+            self.assertEqual('1st line\n2nd line', info['root']['noeol'])
+            self.assertEqual('', info['root']['empty'])
+            self.assertEqual('only line', info['root']['noeol1'])
