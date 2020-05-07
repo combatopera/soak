@@ -50,6 +50,10 @@ class TestConformance(TestCase):
         1st line
         2nd line
     empty: ""
+    d:
+        doubleeol: |+
+            w
+            
     noeol1: |-
         only line
 ''', infotext)
@@ -57,4 +61,5 @@ class TestConformance(TestCase):
             self.assertEqual('first line\nsecond line\n', info['root']['x']['block'])
             self.assertEqual('1st line\n2nd line', info['root']['noeol'])
             self.assertEqual('', info['root']['empty'])
+            self.assertEqual('w\n\n', info['root']['d']['doubleeol'])
             self.assertEqual('only line', info['root']['noeol1'])

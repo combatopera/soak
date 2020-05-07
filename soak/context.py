@@ -35,6 +35,9 @@ def blockliteral(context, textresolvable):
     indent = f"{context.resolved('indent').cat()}{context.resolved('indentunit').cat()}"
     # FIXME: Investigate behaviour when there are multiple trailing newlines.
     text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
+    eofmarker = '...\n'
+    if text.endswith(eofmarker):
+        text = text[:-len(eofmarker)]
     # For convenience we discard the (insignificant) trailing newline:
     return Text('\n'.join(f"{indent if i else ''}{line[2 if i else 0:]}" for i, line in enumerate(text.splitlines())))
 
