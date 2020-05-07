@@ -20,7 +20,12 @@ from aridimpl.model import Directive, Function, Text
 from functools import partial
 from importlib import import_module
 from pathlib import Path
-import os, yaml
+import os, re, yaml
+
+singledigit = re.compile('[0-9]')
+zeroormorespaces = re.compile(' *')
+linefeed = '\n'
+pyyamlindent = 2 # XXX: Can we detect or pass in?
 
 def plugin(toplevel, prefix, phrase, context):
     modulename, globalname = phrase.resolve(context, aslist = True)
@@ -32,15 +37,16 @@ def xmlquote(context, resolvable):
     return Text(escape(resolvable.resolve(context).cat()))
 
 def blockliteral(context, textresolvable):
-    indent = f"{context.resolved('indent').cat()}{context.resolved('indentunit').cat()}"
     text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
-    header, *lines = text.splitlines() # For interpolation convenience we discard the (insignificant) trailing newline.
+    header, *lines = text.splitlines() # For template interpolation convenience we discard the (insignificant) trailing newline.
     if not lines:
         return Text(header)
     if '...' == lines[-1]:
         lines.pop()
-    newline = '\n'
-    return Text(f"""{header}\n{newline.join(f"{indent}{line[2:]}" for line in lines)}""")
+    indentunit = context.resolved('indentunit').cat()
+    fullindent = f"{context.resolved('indent').cat()}{indentunit}"
+    header = singledigit.sub(lambda m: str(len(zeroormorespaces.fullmatch(indentunit).group()) + int(m.group()) - pyyamlindent), header, 1)
+    return Text(f"""{header}\n{linefeed.join(f"{fullindent}{line[pyyamlindent:]}" for line in lines)}""")
 
 def rootpath(toplevel, context, *resolvables):
     return Text(str(Path(toplevel, *(r.resolve(context).cat() for r in resolvables))))
