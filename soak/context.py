@@ -33,6 +33,7 @@ def xmlquote(context, resolvable):
 
 def blockliteral(context, textresolvable):
     indent = f"{context.resolved('indent').value}{context.resolved('indentunit').value}"
+    # FIXME: Investigate behaviour when there are multiple trailing newlines.
     text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
     # For convenience we discard the (insignificant) trailing newline:
     return Text('\n'.join(f"{indent if i else ''}{line[2 if i else 0:]}" for i, line in enumerate(text.splitlines())))

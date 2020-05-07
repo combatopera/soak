@@ -51,7 +51,10 @@ class TestConformance(TestCase):
         1st line
         2nd line
     empty: ""
+    noeol1: |-
+        only line
 ''', actual)
                 self.assertEqual('first line\nsecond line\n', yaml.safe_load(actual)['root']['x']['block'])
                 self.assertEqual('1st line\n2nd line', yaml.safe_load(actual)['root']['noeol'])
                 self.assertEqual('', yaml.safe_load(actual)['root']['empty'])
+                self.assertEqual('only line', yaml.safe_load(actual)['root']['noeol1'])
