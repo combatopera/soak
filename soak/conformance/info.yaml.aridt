@@ -8,3 +8,4 @@ root:
         doubleeolonly: $|$(doubleeolonly)
     noeol1: $|$(noeol1)
     indentedeol: $|$(indentedeol)
+    linear: $|$(linear)

@@ -61,6 +61,7 @@ class TestConformance(TestCase):
         only line
     indentedeol: |4
          x
+    linear: " "
 ''', infotext)
             info = yaml.safe_load(infotext)
             self.assertEqual('first line\nsecond line\n', info['root']['x']['block'])
@@ -70,3 +71,4 @@ class TestConformance(TestCase):
             self.assertEqual('\n\n', info['root']['d']['doubleeolonly'])
             self.assertEqual('only line', info['root']['noeol1'])
             self.assertEqual(' x\n', info['root']['indentedeol']) # TODO: Also test non-space in indentunit.
+            self.assertEqual(' ', info['root']['linear'])

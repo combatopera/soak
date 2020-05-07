@@ -37,6 +37,7 @@ second line
         doubleeolonly = $.(
 
 )
+        linear = $.( )
 mydata = hello there
 : XXX: Shouldn't quote be per-target?
 " = $(jsonquote)
