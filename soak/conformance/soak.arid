@@ -32,6 +32,8 @@ second line
         doubleeol = $.(w
 
 )
+        indentedeol = $.( x
+)
 mydata = hello there
 : XXX: Shouldn't quote be per-target?
 " = $(jsonquote)

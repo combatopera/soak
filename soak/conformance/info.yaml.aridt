@@ -6,3 +6,4 @@ root:
     d:
         doubleeol: $|$(doubleeol)
     noeol1: $|$(noeol1)
+    indentedeol: $|$(indentedeol)
