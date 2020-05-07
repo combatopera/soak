@@ -34,11 +34,13 @@ def xmlquote(context, resolvable):
 def blockliteral(context, textresolvable):
     indent = f"{context.resolved('indent').cat()}{context.resolved('indentunit').cat()}"
     text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
-    eofmarker = '...\n'
-    if text.endswith(eofmarker):
-        text = text[:-len(eofmarker)]
-    # For convenience we discard the (insignificant) trailing newline:
-    return Text('\n'.join(f"{indent if i else ''}{line[2 if i else 0:]}" for i, line in enumerate(text.splitlines())))
+    header, *lines = text.splitlines() # For interpolation convenience we discard the (insignificant) trailing newline.
+    if not lines:
+        return Text(header)
+    if '...' == lines[-1]:
+        lines.pop()
+    newline = '\n'
+    return Text(f"""{header}\n{newline.join(f"{indent}{line[2:]}" for line in lines)}""")
 
 def rootpath(toplevel, context, *resolvables):
     return Text(str(Path(toplevel, *(r.resolve(context).cat() for r in resolvables))))
