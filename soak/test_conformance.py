@@ -65,4 +65,4 @@ class TestConformance(TestCase):
             self.assertEqual('', info['root']['empty'])
             self.assertEqual('w\n\n', info['root']['d']['doubleeol'])
             self.assertEqual('only line', info['root']['noeol1'])
-            self.assertEqual(' x\n', info['root']['indentedeol'])
+            self.assertEqual(' x\n', info['root']['indentedeol']) # TODO: Also test non-space in indentunit.
