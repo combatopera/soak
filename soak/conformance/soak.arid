@@ -17,7 +17,9 @@
 
 plugin conform install
 soak
-    conf.json from = conf.json.aridt
+    conf.json
+        from = conf.json.aridt
+        " = $(jsonquote)
     readme.txt data = Bad example.
     mylib.whl data = $bdist_wheel(mylib)
     info.yaml
@@ -39,5 +41,3 @@ second line
 )
         linear = $.( )
 mydata = hello there
-: XXX: Shouldn't quote be per-target?
-" = $(jsonquote)
