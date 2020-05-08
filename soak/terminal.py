@@ -31,7 +31,7 @@ class Terminal:
 
     def log(self, index, text, rev = False, dark = False):
         dy = self.height - index
-        with self.lock:
+        with self.lock: # XXX: Avoid lock by sending everything in one go?
             tput.cuu(dy)
             if rev:
                 tput.rev()
