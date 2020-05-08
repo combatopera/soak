@@ -17,6 +17,7 @@
 
 from aridity import Context, Repl
 from aridimpl.model import Directive, Function, Text
+from aridimpl.util import NoSuchPathException
 from functools import partial
 from importlib import import_module
 from pathlib import Path
@@ -27,9 +28,15 @@ zeroormorespaces = re.compile(' *')
 linefeed = '\n'
 
 def plugin(toplevel, prefix, phrase, context):
-    modulename, globalname = phrase.resolve(context, aslist = True)
-    package = str(Path(context.resolved('here').cat()).resolve().relative_to(toplevel)).replace(os.sep, '.')
-    getattr(import_module(modulename.cat(), package), globalname.cat())(context)
+    modulename, globalname = (obj.cat() for obj in phrase.resolve(context, aslist = True))
+    if modulename.startswith('.'):
+        relpath = str(Path(context.resolved('here').cat()).resolve().relative_to(toplevel))
+        if '.' == relpath:
+            raise NoSuchPathException('package')
+        package = relpath.replace(os.sep, '.')
+    else:
+        package = None
+    getattr(import_module(modulename, package), globalname)(context)
 
 def xmlquote(context, resolvable):
     from xml.sax.saxutils import escape
