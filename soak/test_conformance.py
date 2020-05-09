@@ -72,3 +72,4 @@ class TestConformance(TestCase):
             self.assertEqual('only line', info['root']['noeol1'])
             self.assertEqual(' x\n', info['root']['indentedeol']) # TODO LATER: Also test non-space in indentunit.
             self.assertEqual(' ', info['root']['linear'])
+            self.assertEqual('Can report relplug OK and veryrelplug OK.\n', (conformance / 'subdir' / 'verysubdir' / 'report.txt').read_text())
