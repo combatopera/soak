@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-from .util import Snapshot
+from .util import PathResolvable, Snapshot
 from aridity import Context, Repl
+from aridimpl.context import slashfunction
 from aridimpl.model import Directive, Function, Text
 from aridimpl.util import NoSuchPathException
 from importlib import import_module
@@ -61,8 +62,7 @@ def blockliteral(context, textresolvable):
     return Text(f"""{header}\n{linefeed.join(f"{contextindent}{indentunit}{line[pyyamlindent:]}" for line in lines)}""")
 
 def rootpath(context, *resolvables):
-    # TODO: Stop resolving once path is absolute.
-    return Text(str(Path(context.resolved('toplevel').cat(), *(r.resolve(context).cat() for r in resolvables))))
+    return slashfunction(context, PathResolvable('toplevel'), *resolvables)
 
 def _toplevel(anydir):
     toplevel, = git.rev_parse.__show_toplevel(cwd = anydir).splitlines()

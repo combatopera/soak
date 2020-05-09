@@ -37,3 +37,11 @@ class Snapshot(Resolvable):
         except AttributeError:
             self._loadobj()
             return self.obj
+
+class PathResolvable(Resolvable):
+
+    def __init__(self, *path):
+        self.path = path
+
+    def resolve(self, context):
+        return context.resolved(*self.path)
