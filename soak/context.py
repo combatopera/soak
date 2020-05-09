@@ -19,11 +19,9 @@ from .util import PathResolvable, Snapshot
 from aridity import Context, Repl
 from aridimpl.context import slashfunction
 from aridimpl.model import Directive, Function, Text
-from aridimpl.util import NoSuchPathException
-from importlib import import_module
 from lagoon import git
 from pathlib import Path
-import os, re, yaml
+import re, yaml
 
 singledigit = re.compile('[0-9]')
 zeroormorespaces = re.compile(' *')
@@ -32,13 +30,13 @@ linefeed = '\n'
 def plugin(prefix, phrase, context):
     modulename, globalname = (obj.cat() for obj in phrase.resolve(context, aslist = True))
     if modulename.startswith('.'):
-        relpath = str(Path(context.resolved('here').cat()).resolve().relative_to(context.resolved('toplevel').cat()))
-        if '.' == relpath:
-            raise NoSuchPathException('package')
-        package = relpath.replace(os.sep, '.')
-    else:
-        package = None
-    getattr(import_module(modulename, package), globalname)(context)
+        raise Exception('Implement me!')
+    words = modulename.split('.')
+    modulepath = Path(context.resolved('toplevel').cat(), *words[:-1]) / f"{words[-1]}.py"
+    g = dict(__name__ = modulename)
+    with modulepath.open() as f:
+        exec(f.read(), g)
+    g[globalname](context)
 
 def xmlquote(context, resolvable):
     from xml.sax.saxutils import escape

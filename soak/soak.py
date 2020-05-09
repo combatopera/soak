@@ -24,7 +24,7 @@ from functools import partial
 from lagoon import diff
 from pathlib import Path
 from splut import invokeall
-import logging, os, sys
+import logging, os
 
 class SoakConfig:
 
@@ -62,8 +62,6 @@ def main_soak():
 def soak(config, soakroot):
     logging.basicConfig(format = "[%(levelname)s] %(message)s", level = logging.DEBUG if config.v else logging.INFO)
     parent = createparent(soakroot)
-    # FIXME LATER: Avoid modifying global state (when called from tests).
-    sys.path.append(parent.resolved('toplevel').cat()) # XXX: Or prepend?
     soakconfigs = [SoakConfig(parent, p) for p in soakroot.rglob('soak.arid')]
     if not config.n:
         terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs)) if 'TERM' in os.environ else LogFile
