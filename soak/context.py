@@ -34,14 +34,15 @@ def plugin(prefix, phrase, context):
     modulename, globalname = (obj.cat() for obj in phrase.resolve(context, aslist = True))
     leadingdots = len(zeroormoredots.match(modulename).group())
     words = modulename[leadingdots:].split('.')
+    relpath = Path(*words[:-1]) / f"{words[-1]}{dotpy}"
     if leadingdots:
-        modulepath = Path(context.resolved('here').cat(), *['..'] * (leadingdots - 1), *words[:-1]) / f"{words[-1]}{dotpy}"
+        modulepath = Path(context.resolved('here').cat(), *['..'] * (leadingdots - 1), relpath)
         try:
             modulename = str(modulepath.relative_to(context.resolved('toplevel').cat()))[:-len(dotpy)].replace(os.sep, '.')
         except NoSuchPathException:
             modulename = None # It won't be able to do its own relative imports.
     else:
-        modulepath = Path(context.resolved('toplevel').cat(), *words[:-1]) / f"{words[-1]}{dotpy}"
+        modulepath = Path(context.resolved('toplevel').cat(), relpath)
     g = {} if modulename is None else dict(__name__ = modulename)
     with modulepath.open() as f:
         exec(f.read(), g)
