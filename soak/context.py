@@ -29,6 +29,7 @@ zeroormorespaces = re.compile(' *')
 zeroormoredots = re.compile('[.]*')
 linefeed = '\n'
 dotpy = '.py'
+toplevelres = PathResolvable('toplevel')
 
 def plugin(prefix, phrase, context):
     modulename, globalname = (obj.cat() for obj in phrase.resolve(context, aslist = True))
@@ -38,11 +39,11 @@ def plugin(prefix, phrase, context):
     if leadingdots:
         modulepath = Path(context.resolved('here').cat(), *['..'] * (leadingdots - 1), relpath)
         try:
-            modulename = str(modulepath.relative_to(context.resolved('toplevel').cat()))[:-len(dotpy)].replace(os.sep, '.')
+            modulename = str(modulepath.relative_to(toplevelres.resolve(context).cat()))[:-len(dotpy)].replace(os.sep, '.')
         except NoSuchPathException:
             modulename = None # It won't be able to do its own relative imports.
     else:
-        modulepath = Path(context.resolved('toplevel').cat(), relpath)
+        modulepath = Path(toplevelres.resolve(context).cat(), relpath)
     g = {} if modulename is None else dict(__name__ = modulename)
     with modulepath.open() as f:
         exec(f.read(), g)
@@ -70,7 +71,7 @@ def blockliteral(context, textresolvable):
     return Text(f"""{header}\n{linefeed.join(f"{contextindent}{indentunit}{line[pyyamlindent:]}" for line in lines)}""")
 
 def rootpath(context, *resolvables):
-    return slashfunction(context, PathResolvable('toplevel'), *resolvables)
+    return slashfunction(context, toplevelres, *resolvables)
 
 def _toplevel(anydir):
     try:
