@@ -19,28 +19,30 @@ from .util import PathResolvable, Snapshot
 from aridity import Context, Repl
 from aridimpl.context import slashfunction
 from aridimpl.model import Directive, Function, Text
+from aridimpl.util import NoSuchPathException
 from lagoon import git
 from pathlib import Path
-import os, re, yaml
+import os, re, subprocess, yaml
 
 singledigit = re.compile('[0-9]')
 zeroormorespaces = re.compile(' *')
 zeroormoredots = re.compile('[.]*')
 linefeed = '\n'
+dotpy = '.py'
 
 def plugin(prefix, phrase, context):
-    toplevel = context.resolved('toplevel').cat()
     modulename, globalname = (obj.cat() for obj in phrase.resolve(context, aslist = True))
     leadingdots = len(zeroormoredots.match(modulename).group())
+    words = modulename[leadingdots:].split('.')
     if leadingdots:
-        here = Path(context.resolved('here').cat())
-        rel = here.relative_to(toplevel)
-        for _ in range(leadingdots - 1):
-            rel = rel.parent
-        modulename = str(rel / modulename[leadingdots:].replace('.', os.sep)).replace(os.sep, '.')
-    words = modulename.split('.')
-    modulepath = Path(toplevel, *words[:-1]) / f"{words[-1]}.py"
-    g = dict(__name__ = modulename) # TODO: Only needed if the plugin wants to do relative imports.
+        modulepath = Path(context.resolved('here').cat(), *['..'] * (leadingdots - 1), *words[:-1]) / f"{words[-1]}{dotpy}"
+        try:
+            modulename = str(modulepath.relative_to(context.resolved('toplevel').cat()))[:-len(dotpy)].replace(os.sep, '.')
+        except NoSuchPathException:
+            modulename = None # It won't be able to do its own relative imports.
+    else:
+        modulepath = Path(context.resolved('toplevel').cat(), *words[:-1]) / f"{words[-1]}{dotpy}"
+    g = {} if modulename is None else dict(__name__ = modulename)
     with modulepath.open() as f:
         exec(f.read(), g)
     g[globalname](context)
@@ -70,8 +72,11 @@ def rootpath(context, *resolvables):
     return slashfunction(context, PathResolvable('toplevel'), *resolvables)
 
 def _toplevel(anydir):
-    toplevel, = git.rev_parse.__show_toplevel(cwd = anydir).splitlines()
-    return Text(toplevel)
+    try:
+        toplevel, = git.rev_parse.__show_toplevel(cwd = anydir).splitlines()
+        return Text(toplevel)
+    except subprocess.CalledProcessError:
+        raise NoSuchPathException('Git property: toplevel')
 
 def createparent(soakroot):
     parent = Context()
