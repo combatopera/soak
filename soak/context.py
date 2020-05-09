@@ -21,19 +21,26 @@ from aridimpl.context import slashfunction
 from aridimpl.model import Directive, Function, Text
 from lagoon import git
 from pathlib import Path
-import re, yaml
+import os, re, yaml
 
 singledigit = re.compile('[0-9]')
 zeroormorespaces = re.compile(' *')
+zeroormoredots = re.compile('[.]*')
 linefeed = '\n'
 
 def plugin(prefix, phrase, context):
+    toplevel = context.resolved('toplevel').cat()
     modulename, globalname = (obj.cat() for obj in phrase.resolve(context, aslist = True))
-    if modulename.startswith('.'):
-        raise Exception('Implement me!')
+    leadingdots = len(zeroormoredots.match(modulename).group())
+    if leadingdots:
+        here = Path(context.resolved('here').cat())
+        rel = here.relative_to(toplevel)
+        for _ in range(leadingdots - 1):
+            rel = rel.parent
+        modulename = str(rel / modulename[leadingdots:].replace('.', os.sep)).replace(os.sep, '.')
     words = modulename.split('.')
-    modulepath = Path(context.resolved('toplevel').cat(), *words[:-1]) / f"{words[-1]}.py"
-    g = dict(__name__ = modulename)
+    modulepath = Path(toplevel, *words[:-1]) / f"{words[-1]}.py"
+    g = dict(__name__ = modulename) # TODO: Only needed if the plugin wants to do relative imports.
     with modulepath.open() as f:
         exec(f.read(), g)
     g[globalname](context)
