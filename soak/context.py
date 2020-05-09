@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
+from .util import Snapshot
 from aridity import Context, Repl
 from aridimpl.model import Directive, Function, Text
 from aridimpl.util import NoSuchPathException
-from functools import partial
 from importlib import import_module
+from lagoon import git
 from pathlib import Path
 import os, re, yaml
 
@@ -27,10 +28,10 @@ singledigit = re.compile('[0-9]')
 zeroormorespaces = re.compile(' *')
 linefeed = '\n'
 
-def plugin(toplevel, prefix, phrase, context):
+def plugin(prefix, phrase, context):
     modulename, globalname = (obj.cat() for obj in phrase.resolve(context, aslist = True))
     if modulename.startswith('.'):
-        relpath = str(Path(context.resolved('here').cat()).resolve().relative_to(toplevel))
+        relpath = str(Path(context.resolved('here').cat()).resolve().relative_to(context.resolved('toplevel').cat()))
         if '.' == relpath:
             raise NoSuchPathException('package')
         package = relpath.replace(os.sep, '.')
@@ -59,15 +60,21 @@ def blockliteral(context, textresolvable):
     contextindent = context.resolved('indent').cat()
     return Text(f"""{header}\n{linefeed.join(f"{contextindent}{indentunit}{line[pyyamlindent:]}" for line in lines)}""")
 
-def rootpath(toplevel, context, *resolvables):
-    return Text(str(Path(toplevel, *(r.resolve(context).cat() for r in resolvables))))
+def rootpath(context, *resolvables):
+    # TODO: Stop resolving once path is absolute.
+    return Text(str(Path(context.resolved('toplevel').cat(), *(r.resolve(context).cat() for r in resolvables))))
 
-def createparent(toplevel):
+def _toplevel(anydir):
+    toplevel, = git.rev_parse.__show_toplevel(cwd = anydir).splitlines()
+    return Text(toplevel)
+
+def createparent(soakroot):
     parent = Context()
-    parent['plugin',] = Directive(partial(plugin, toplevel))
+    parent['plugin',] = Directive(plugin)
     parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
-    parent['//',] = Function(partial(rootpath, toplevel))
+    parent['//',] = Function(rootpath)
+    parent['toplevel',] = Snapshot(lambda: _toplevel(soakroot))
     with Repl(parent) as repl:
         repl('data = $processtemplate$(from)') # XXX: Too easy to accidentally override?
         repl.printf("indentunit = %s", 4 * ' ')

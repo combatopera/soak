@@ -21,7 +21,7 @@ from .terminal import LogFile, Terminal
 from argparse import ArgumentParser
 from aridity import Repl
 from functools import partial
-from lagoon import diff, git
+from lagoon import diff
 from pathlib import Path
 from splut import invokeall
 import logging, os, sys
@@ -59,14 +59,12 @@ def main_soak():
     parser.add_argument('-v', action = 'store_true')
     soak(parser.parse_args(), Path('.'))
 
-def soak(config, root):
+def soak(config, soakroot):
     logging.basicConfig(format = "[%(levelname)s] %(message)s", level = logging.DEBUG if config.v else logging.INFO)
-    # FIXME: The toplevel should be lazy like everything else.
-    toplevel, = git.rev_parse.__show_toplevel(cwd = root).splitlines()
+    parent = createparent(soakroot)
     # FIXME LATER: Avoid modifying global state (when called from tests).
-    sys.path.append(toplevel) # XXX: Or prepend?
-    parent = createparent(toplevel)
-    soakconfigs = [SoakConfig(parent, p) for p in root.rglob('soak.arid')]
+    sys.path.append(parent.resolved('toplevel').cat()) # XXX: Or prepend?
+    soakconfigs = [SoakConfig(parent, p) for p in soakroot.rglob('soak.arid')]
     if not config.n:
         terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs)) if 'TERM' in os.environ else LogFile
         with cpuexecutor() as executor:
