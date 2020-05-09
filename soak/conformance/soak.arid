@@ -15,7 +15,6 @@
 : You should have received a copy of the GNU General Public License
 : along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-: TODO: Also check relative package.
 plugin conform install
 soak
     conf.json
