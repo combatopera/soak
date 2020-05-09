@@ -37,8 +37,7 @@ class TestConformance(TestCase):
             soak(SimpleNamespace(n = None, d = None, v = None), conformance)
             with (conformance / 'conf.json').open() as f:
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))
-            with (conformance / 'readme.txt').open() as f:
-                self.assertEqual('Bad example.', f.read())
+            self.assertEqual('Bad example.', (conformance / 'readme.txt').read_text())
             self.assertTrue(' testing: mylib.py ' in unzip._t(conformance / 'mylib.whl'))
             infotext = (conformance / 'info.yaml').read_text()
             self.assertEqual('''root:
