@@ -19,10 +19,14 @@ from diapyr.util import singleton
 from lagoon import tput
 import sys
 
-class Terminal:
+class AbstractLog:
+
+    stream = sys.stderr
+
+class Terminal(AbstractLog):
 
     def __init__(self, height):
-        sys.stderr.write('\n' * height)
+        self.stream.write('\n' * height)
         self.height = height
 
     def log(self, index, obj, rev = False, dark = False):
@@ -37,12 +41,12 @@ class Terminal:
             yield '\r'
             yield tput.sgr0()
             yield tput.cud(dy)
-        sys.stderr.write(''.join(g()))
-        sys.stderr.flush()
+        self.stream.write(''.join(g()))
+        self.stream.flush()
 
 @singleton
-class LogFile:
+class LogFile(AbstractLog):
 
     def log(self, index, obj, rev = False, dark = False):
         if not dark:
-            print('Damp:' if rev else 'Soaked:', obj, file = sys.stderr)
+            print('Damp:' if rev else 'Soaked:', obj, file = self.stream)
