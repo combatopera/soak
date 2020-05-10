@@ -23,13 +23,16 @@ class AbstractLog:
 
     stream = sys.stderr
 
+    def log(self, index, obj, rev = False, dark = False):
+        return self.logimpl(index, obj, rev, dark)
+
 class Terminal(AbstractLog):
 
     def __init__(self, height):
         self.stream.write('\n' * height)
         self.height = height
 
-    def log(self, index, obj, rev = False, dark = False):
+    def logimpl(self, index, obj, rev, dark):
         def g():
             dy = self.height - index
             yield tput.cuu(dy)
@@ -47,6 +50,6 @@ class Terminal(AbstractLog):
 @singleton
 class LogFile(AbstractLog):
 
-    def log(self, index, obj, rev = False, dark = False):
+    def logimpl(self, index, obj, rev, dark):
         if not dark:
             print('Damp:' if rev else 'Soaked:', obj, file = self.stream)
