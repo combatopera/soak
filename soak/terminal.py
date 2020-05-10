@@ -17,32 +17,28 @@
 
 from diapyr.util import singleton
 from lagoon import tput
-from threading import Lock
 import sys
-
-tput = tput.partial(stdout = sys.stderr)
 
 class Terminal:
 
     def __init__(self, height):
         sys.stderr.write('\n' * height)
-        self.lock = Lock()
         self.height = height
 
     def log(self, index, text, rev = False, dark = False):
-        dy = self.height - index
-        with self.lock: # XXX: Avoid lock by sending everything in one go?
-            tput.cuu(dy)
+        def g():
+            dy = self.height - index
+            yield tput.cuu(dy)
             if rev:
-                tput.rev()
+                yield tput.rev()
             if dark:
-                tput.setaf(0)
-            print(text, file = sys.stderr)
-            tput.sgr0()
-            dy -= 1
-            if dy:
-                tput.cud(dy)
-            sys.stderr.flush()
+                yield tput.setaf(0)
+            yield str(text)
+            yield '\r'
+            yield tput.sgr0()
+            yield tput.cud(dy)
+        sys.stderr.write(''.join(g()))
+        sys.stderr.flush()
 
 @singleton
 class LogFile:
