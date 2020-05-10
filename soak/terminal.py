@@ -25,7 +25,7 @@ class Terminal:
         sys.stderr.write('\n' * height)
         self.height = height
 
-    def log(self, index, text, rev = False, dark = False):
+    def log(self, index, obj, rev = False, dark = False):
         def g():
             dy = self.height - index
             yield tput.cuu(dy)
@@ -33,7 +33,7 @@ class Terminal:
                 yield tput.rev()
             if dark:
                 yield tput.setaf(0)
-            yield str(text)
+            yield str(obj)
             yield '\r'
             yield tput.sgr0()
             yield tput.cud(dy)
@@ -43,6 +43,6 @@ class Terminal:
 @singleton
 class LogFile:
 
-    def log(self, index, text, rev = False, dark = False):
+    def log(self, index, obj, rev = False, dark = False):
         if not dark:
-            print('Damp:' if rev else 'Soaked:', text, file = sys.stderr)
+            print('Damp:' if rev else 'Soaked:', obj, file = sys.stderr)
