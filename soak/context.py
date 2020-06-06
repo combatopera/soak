@@ -49,7 +49,7 @@ def plugin(prefix, phrase, context):
         exec(f.read(), g)
     g[globalname](context)
 
-def xmlquote(context, resolvable):
+def xmlquote(context, resolvable): # FIXME: Insufficient for attributes.
     from xml.sax.saxutils import escape
     return Text(escape(resolvable.resolve(context).cat()))
 
