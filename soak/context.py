@@ -49,10 +49,6 @@ def plugin(prefix, phrase, context):
         exec(f.read(), g)
     g[globalname](context)
 
-def xmlquote(context, resolvable): # FIXME: Insufficient for attributes.
-    from xml.sax.saxutils import escape
-    return Text(escape(resolvable.resolve(context).cat()))
-
 def blockliteral(context, textresolvable):
     text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
     header, *lines = text.splitlines() # For template interpolation convenience we discard the (insignificant) trailing newline.
@@ -83,7 +79,6 @@ def _toplevel(anydir):
 def createparent(soakroot):
     parent = Context()
     parent['plugin',] = Directive(plugin)
-    parent['xml"',] = Function(xmlquote)
     parent['|',] = Function(blockliteral)
     parent['//',] = Function(rootpath)
     parent['toplevel',] = Snapshot(lambda: _toplevel(soakroot))
