@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-from aridimpl.model import Resolvable
+from aridity.model import Resolvable
 from threading import Lock
 
 class Snapshot(Resolvable):

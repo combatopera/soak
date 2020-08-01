@@ -16,10 +16,9 @@
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
 from .util import PathResolvable, Snapshot
-from aridity import Context, Repl
-from aridimpl.context import slashfunction
-from aridimpl.model import Directive, Function, Text
-from aridimpl.util import NoSuchPathException
+from aridity import Context, NoSuchPathException, Repl
+from aridity.context import slashfunction
+from aridity.model import Directive, Function, Text
 from lagoon import git
 from pathlib import Path
 import os, re, subprocess, yaml
