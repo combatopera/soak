@@ -30,8 +30,8 @@ linefeed = '\n'
 dotpy = '.py'
 toplevelres = PathResolvable('toplevel')
 
-def plugin(prefix, phrase, context):
-    modulename, globalname = (obj.cat() for obj in phrase.resolve(context, aslist = True))
+def plugin(prefix, suffix, context):
+    modulename, globalname = (obj.cat() for obj in suffix.tophrase().resolve(context, aslist = True))
     leadingdots = len(zeroormoredots.match(modulename).group())
     words = modulename[leadingdots:].split('.')
     relpath = Path(*words[:-1]) / f"{words[-1]}{dotpy}"
