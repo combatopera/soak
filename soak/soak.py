@@ -35,7 +35,7 @@ class SoakConfig:
         with Repl(self.context) as repl:
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
-        self.reltargets = [Path(rt) for rt in self.context.resolved(self.soakkey).resolvables.keys()]
+        self.reltargets = [Path(rt) for rt, _ in self.context.resolved(self.soakkey).resolvables.items()]
         self.dirpath = configpath.parent
 
     def process(self, log, reltarget):
