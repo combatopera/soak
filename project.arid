@@ -18,11 +18,11 @@
 name = soak
 pyversions += 3
 requires +=
-    aridity
-    diapyr
-    lagoon
-    PyYAML
-    splut
+    aridity>=35
+    diapyr>=18
+    lagoon>=17
+    PyYAML>=5.2
+    splut>=4
 years += 2020
 author = Andrzej Cichocki
 executable = true
