@@ -18,7 +18,7 @@
 from .soak import soak
 from lagoon import git, unzip
 from pathlib import Path
-from pkg_resources import resource_filename
+from pkg_resources import resource_filename # TODO: Port to new API.
 from shutil import copytree
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
