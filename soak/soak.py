@@ -20,10 +20,10 @@ from .context import createparent
 from .terminal import LogFile, Terminal
 from argparse import ArgumentParser
 from aridity import Repl
+from diapyr.util import invokeall
 from functools import partial
 from lagoon import diff
 from pathlib import Path
-from splut import invokeall
 import logging, os
 
 class SoakConfig:
