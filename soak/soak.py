@@ -53,6 +53,7 @@ class SoakConfig:
         diff._us.print('--color=always', '-', self.dirpath / reltarget, input = origtext, check = False)
 
 def main_soak():
+    'Process aridity templates as per all soak.arid configs in directory tree.'
     parser = ArgumentParser()
     parser.add_argument('-n', action = 'store_true')
     parser.add_argument('-d', action = 'store_true')

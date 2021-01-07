@@ -34,3 +34,8 @@ python3 -m venv venvname
 venvname/bin/pip install -e soak
 . venvname/bin/activate
 ```
+
+## Commands
+
+### soak
+Process aridity templates as per all soak.arid configs in directory tree.
