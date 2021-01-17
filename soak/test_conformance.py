@@ -33,7 +33,7 @@ class TestConformance(TestCase):
             conformance = Path(tempdir, source.name)
             # TODO LATER: Ideally do not copy git-ignored files.
             copytree(source, conformance)
-            git.init.print(conformance)
+            git.init[print](conformance)
             soak(SimpleNamespace(n = None, d = None, v = None), conformance)
             with (conformance / 'conf.json').open() as f:
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))

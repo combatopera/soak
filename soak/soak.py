@@ -50,7 +50,7 @@ class SoakConfig:
         return self.context.resolved(self.soakkey, str(reltarget), 'diff').cat()
 
     def diff(self, origtext, reltarget):
-        diff._us.print('--color=always', '-', self.dirpath / reltarget, input = origtext, check = False)
+        diff._us[print]('--color=always', '-', self.dirpath / reltarget, input = origtext, check = False)
 
 def main_soak():
     'Process aridity templates as per all soak.arid configs in directory tree.'
