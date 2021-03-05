@@ -17,5 +17,5 @@
 
 from aridity.model import Text
 
-def furnish(context):
-    context['relplug', 'status'] = Text('relplug OK')
+def furnish(scope):
+    scope['relplug', 'status'] = Text('relplug OK')

@@ -16,9 +16,9 @@
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
 from .util import PathResolvable, Snapshot
-from aridity import Context, NoSuchPathException, Repl
-from aridity.context import slashfunction
+from aridity import NoSuchPathException, Repl
 from aridity.model import Directive, Function, Text
+from aridity.scope import Scope, slashfunction
 from lagoon import git
 from pathlib import Path
 import os, re, subprocess, yaml
@@ -30,43 +30,43 @@ linefeed = '\n'
 dotpy = '.py'
 toplevelres = PathResolvable('toplevel')
 
-def plugin(prefix, suffix, context):
-    modulename, globalname = (obj.cat() for _, obj in suffix.tophrase().resolve(context, aslist = True).itero())
+def plugin(prefix, suffix, scope):
+    modulename, globalname = (obj.cat() for _, obj in suffix.tophrase().resolve(scope, aslist = True).itero())
     leadingdots = len(zeroormoredots.match(modulename).group())
     words = modulename[leadingdots:].split('.')
     relpath = Path(*words[:-1]) / f"{words[-1]}{dotpy}"
     if leadingdots:
-        modulepath = Path(context.resolved('here').cat(), *['..'] * (leadingdots - 1), relpath)
+        modulepath = Path(scope.resolved('here').cat(), *['..'] * (leadingdots - 1), relpath)
         try:
-            modulename = str(modulepath.relative_to(toplevelres.resolve(context).cat()))[:-len(dotpy)].replace(os.sep, '.')
+            modulename = str(modulepath.relative_to(toplevelres.resolve(scope).cat()))[:-len(dotpy)].replace(os.sep, '.')
         except NoSuchPathException:
             modulename = None # It won't be able to do its own relative imports.
     else:
-        modulepath = Path(toplevelres.resolve(context).cat(), relpath)
+        modulepath = Path(toplevelres.resolve(scope).cat(), relpath)
     g = {} if modulename is None else dict(__name__ = modulename)
     with modulepath.open() as f:
         exec(f.read(), g)
-    g[globalname](context)
+    g[globalname](scope)
 
-def blockliteral(context, textresolvable):
-    text = yaml.dump(textresolvable.resolve(context).cat(), default_style = '|')
+def blockliteral(scope, textresolvable):
+    text = yaml.dump(textresolvable.resolve(scope).cat(), default_style = '|')
     header, *lines = text.splitlines() # For template interpolation convenience we discard the (insignificant) trailing newline.
     if not lines:
         return Text(header)
     if '...' == lines[-1]:
         lines.pop() # XXX: Could this result in no remaining lines?
-    indentunit = context.resolved('indentunit').cat()
+    indentunit = scope.resolved('indentunit').cat()
     m = singledigit.search(header)
     if m is None:
         pyyamlindent = len(zeroormorespaces.match(lines[0]).group())
     else:
         pyyamlindent = int(m.group())
         header = f"{header[:m.start()]}{len(zeroormorespaces.fullmatch(indentunit).group())}{header[m.end():]}"
-    contextindent = context.resolved('indent').cat()
+    contextindent = scope.resolved('indent').cat()
     return Text(f"""{header}\n{linefeed.join(f"{contextindent}{indentunit}{line[pyyamlindent:]}" for line in lines)}""")
 
-def rootpath(context, *resolvables):
-    return slashfunction(context, toplevelres, *resolvables)
+def rootpath(scope, *resolvables):
+    return slashfunction(scope, toplevelres, *resolvables)
 
 def _toplevel(anydir):
     try:
@@ -76,7 +76,7 @@ def _toplevel(anydir):
         raise NoSuchPathException('Git property: toplevel')
 
 def createparent(soakroot):
-    parent = Context()
+    parent = Scope()
     parent['plugin',] = Directive(plugin)
     parent['|',] = Function(blockliteral)
     parent['//',] = Function(rootpath)

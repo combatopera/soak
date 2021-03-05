@@ -31,23 +31,23 @@ class SoakConfig:
     soakkey = 'soak'
 
     def __init__(self, parent, configpath):
-        self.context = parent.createchild()
-        with Repl(self.context) as repl:
+        self.scope = parent.createchild()
+        with Repl(self.scope) as repl:
             repl.printf("cwd = %s", configpath.parent)
             repl.printf(". %s", configpath.name)
-        self.reltargets = [Path(rt) for rt, _ in self.context.resolved(self.soakkey).resolvables.items()]
+        self.reltargets = [Path(rt) for rt, _ in self.scope.resolved(self.soakkey).resolvables.items()]
         self.dirpath = configpath.parent
 
     def process(self, log, reltarget):
         relpartial = reltarget.with_name(f"{reltarget.name}.part")
         target = self.dirpath / reltarget
         log(target, rev = True)
-        self.context.resolved(self.soakkey, str(reltarget), 'data').writeout(self.dirpath / relpartial)
+        self.scope.resolved(self.soakkey, str(reltarget), 'data').writeout(self.dirpath / relpartial)
         (self.dirpath / relpartial).rename(target)
         log(target)
 
     def origtext(self, reltarget):
-        return self.context.resolved(self.soakkey, str(reltarget), 'diff').cat()
+        return self.scope.resolved(self.soakkey, str(reltarget), 'diff').cat()
 
     def diff(self, origtext, reltarget):
         diff._us[print]('--color=always', '-', self.dirpath / reltarget, input = origtext, check = False)

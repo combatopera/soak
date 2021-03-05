@@ -17,5 +17,5 @@
 
 from aridity.model import Text
 
-def augment(context):
-    context['veryrelplug', 'status'] = Text('veryrelplug OK')
+def augment(scope):
+    scope['veryrelplug', 'status'] = Text('veryrelplug OK')

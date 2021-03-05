@@ -49,7 +49,7 @@ class Snapshot(Resolvable):
                     eornone = e
                 self.result = self.Result(eornone, obj)
 
-    def resolve(self, context):
+    def resolve(self, scope):
         try:
             r = self.result
         except AttributeError:
@@ -62,5 +62,5 @@ class PathResolvable(Resolvable):
     def __init__(self, *path):
         self.path = path
 
-    def resolve(self, context):
-        return context.resolved(*self.path)
+    def resolve(self, scope):
+        return scope.resolved(*self.path)

@@ -19,14 +19,14 @@ from aridity.model import Binary, Function
 from pathlib import Path
 import subprocess, sys
 
-def bdist_wheel(context, resolvable):
-    projectdir = Path(context.resolved('cwd').cat(), resolvable.resolve(context).cat())
+def bdist_wheel(scope, resolvable):
+    projectdir = Path(scope.resolved('cwd').cat(), resolvable.resolve(scope).cat())
     subprocess.check_call([sys.executable, 'setup.py', 'bdist_wheel'], cwd = projectdir, stdout = subprocess.DEVNULL)
     # TODO LATER: Instead of reading the file, add a type representing a path and return that.
     whlpath, = (projectdir / 'dist').glob('*.whl')
     with whlpath.open('rb') as f:
         return Binary(f.read())
 
-def install(context):
+def install(scope):
     for f in bdist_wheel,:
-        context[f.__name__,] = Function(f)
+        scope[f.__name__,] = Function(f)
