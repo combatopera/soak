@@ -18,7 +18,6 @@
 from .soak import soak
 from lagoon import git, unzip
 from pathlib import Path
-from pkg_resources import resource_filename # TODO: Port to new API.
 from shutil import copytree
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -28,7 +27,7 @@ import json, yaml
 class TestConformance(TestCase):
 
     def test_works(self):
-        source = Path(resource_filename(__name__, 'conformance'))
+        source = Path(__file__).parent / 'conformance'
         with TemporaryDirectory() as tempdir:
             conformance = Path(tempdir, source.name)
             # TODO LATER: Ideally do not copy git-ignored files.
