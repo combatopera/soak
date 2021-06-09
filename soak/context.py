@@ -20,6 +20,7 @@ from aridity import NoSuchPathException, Repl
 from aridity.model import Directive, Function, Text
 from aridity.scope import Scope, slashfunction
 from lagoon import git
+from lagoon.program import ONELINE
 from pathlib import Path
 import os, re, subprocess, yaml
 
@@ -70,8 +71,7 @@ def rootpath(scope, *resolvables):
 
 def _toplevel(anydir):
     try:
-        toplevel, = git.rev_parse.__show_toplevel(cwd = anydir).splitlines()
-        return Text(toplevel)
+        return Text(git.rev_parse.__show_toplevel[ONELINE](cwd = anydir))
     except subprocess.CalledProcessError:
         raise NoSuchPathException('Git property: toplevel')
 
