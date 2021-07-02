@@ -33,7 +33,7 @@ class SoakConfig:
     def __init__(self, parent, configpath):
         self.scope = parent.createchild()
         with Repl(self.scope) as repl:
-            repl.printf("cwd = %s", configpath.parent)
+            repl.printf("cwd = %s", configpath.parent.resolve())
             repl.printf(". %s", configpath.name)
         self.reltargets = [Path(rt) for rt, _ in self.scope.resolved(self.soakkey).resolvables.items()]
         self.dirpath = configpath.parent
