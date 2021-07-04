@@ -19,7 +19,6 @@ from . import cpuexecutor
 from .context import createparent
 from .terminal import LogFile, Terminal
 from argparse import ArgumentParser
-from aridity import Repl
 from diapyr.util import invokeall
 from functools import partial
 from lagoon import diff
@@ -31,23 +30,23 @@ class SoakConfig:
     soakkey = 'soak'
 
     def __init__(self, parent, configpath):
-        self.scope = (-parent).childctrl().scope()
-        with Repl(self.scope) as repl:
-            repl.printf("cwd = %s", configpath.parent.resolve())
-            repl.printf(". %s", configpath.name)
-        self.reltargets = [Path(rt) for rt, _ in self.scope.resolved(self.soakkey).resolvables.items()]
+        ctrl = (-parent).childctrl()
+        ctrl.printf("cwd = %s", configpath.parent.resolve())
+        ctrl.printf(". %s", configpath.name)
+        self.node = ctrl.node
+        self.reltargets = [Path(rt) for rt, _ in (-getattr(self.node, self.soakkey)).scope().resolvables.items()]
         self.dirpath = configpath.parent
 
     def process(self, log, reltarget):
         relpartial = reltarget.with_name(f"{reltarget.name}.part")
         target = self.dirpath / reltarget
         log(target, rev = True)
-        self.scope.resolved(self.soakkey, str(reltarget), 'data').writeout(self.dirpath / relpartial)
+        (-self.node).scope().resolved(self.soakkey, str(reltarget), 'data').writeout(self.dirpath / relpartial)
         (self.dirpath / relpartial).rename(target)
         log(target)
 
     def origtext(self, reltarget):
-        return self.scope.resolved(self.soakkey, str(reltarget), 'diff').cat()
+        return getattr(getattr(self.node, self.soakkey), str(reltarget)).diff
 
     def diff(self, origtext, reltarget):
         diff._us[print]('--color=always', '-', self.dirpath / reltarget, input = origtext, check = False)
