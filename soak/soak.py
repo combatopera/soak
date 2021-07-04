@@ -22,6 +22,7 @@ from argparse import ArgumentParser
 from diapyr.util import invokeall
 from functools import partial
 from lagoon import diff
+from lagoon.util import atomic
 from pathlib import Path
 import logging, os
 
@@ -38,11 +39,10 @@ class SoakConfig:
         self.dirpath = configpath.parent
 
     def process(self, log, reltarget):
-        relpartial = reltarget.with_name(f"{reltarget.name}.part")
         target = self.dirpath / reltarget
         log(target, rev = True)
-        (-self.node).scope().resolved(self.soakkey, str(reltarget), 'data').writeout(self.dirpath / relpartial)
-        (self.dirpath / relpartial).rename(target)
+        with atomic(target) as partpath:
+            (-self.node).scope().resolved(self.soakkey, str(reltarget), 'data').writeout(partpath)
         log(target)
 
     def origtext(self, reltarget):
