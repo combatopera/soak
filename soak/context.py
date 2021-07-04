@@ -16,9 +16,10 @@
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
 from .util import PathResolvable, Snapshot
-from aridity import NoSuchPathException, Repl
+from aridity import NoSuchPathException
+from aridity.config import ConfigCtrl
 from aridity.model import Directive, Function, Text
-from aridity.scope import Scope, slashfunction
+from aridity.scope import slashfunction
 from lagoon import git
 from lagoon.program import ONELINE
 from pathlib import Path
@@ -76,12 +77,12 @@ def _toplevel(anydir):
         raise NoSuchPathException('Git property: toplevel')
 
 def createparent(soakroot):
-    parent = Scope()
+    ctrl = ConfigCtrl()
+    parent = ctrl.scope()
     parent['plugin',] = Directive(plugin)
     parent['|',] = Function(blockliteral)
     parent['//',] = Function(rootpath)
     parent['toplevel',] = Snapshot(lambda: _toplevel(soakroot))
-    with Repl(parent) as repl:
-        repl('data = $processtemplate$(from)') # XXX: Too easy to accidentally override?
-        repl.printf("indentunit = %s", 4 * ' ')
-    return parent
+    ctrl.execute('data = $processtemplate$(from)') # XXX: Too easy to accidentally override?
+    ctrl.printf("indentunit = %s", 4 * ' ')
+    return ctrl.node

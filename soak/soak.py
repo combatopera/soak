@@ -31,7 +31,7 @@ class SoakConfig:
     soakkey = 'soak'
 
     def __init__(self, parent, configpath):
-        self.scope = parent.createchild()
+        self.scope = (-parent).childctrl().scope()
         with Repl(self.scope) as repl:
             repl.printf("cwd = %s", configpath.parent.resolve())
             repl.printf(". %s", configpath.name)
