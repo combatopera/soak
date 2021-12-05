@@ -25,3 +25,4 @@ requires +=
 years += 2020
 author = Andrzej Cichocki
 executable = true
+buildbot enabled = true
