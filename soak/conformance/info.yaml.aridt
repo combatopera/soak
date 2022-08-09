@@ -1,6 +1,9 @@
 root:
     x:
         block: $|$(block)
+        litblock: $|$.(primary line
+secondary line
+)
     noeol: $|$(noeol)
     empty: $|$(empty)
     d:

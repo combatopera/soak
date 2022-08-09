@@ -44,6 +44,9 @@ class TestConformance(TestCase):
         block: |
             first line
             second line
+        litblock: |
+            primary line
+            secondary line
     noeol: |-
         1st line
         2nd line

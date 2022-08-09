@@ -51,6 +51,7 @@ def plugin(prefix, suffix, scope):
     g[globalname](scope)
 
 def blockliteral(scope, textresolvable):
+    contextindent = scope.resolved('indent').cat()
     text = yaml.dump(textresolvable.resolve(scope).cat(), default_style = '|')
     header, *lines = text.splitlines() # For template interpolation convenience we discard the (insignificant) trailing newline.
     if not lines:
@@ -64,7 +65,6 @@ def blockliteral(scope, textresolvable):
     else:
         pyyamlindent = int(m.group())
         header = f"{header[:m.start()]}{len(zeroormorespaces.fullmatch(indentunit).group())}{header[m.end():]}"
-    contextindent = scope.resolved('indent').cat()
     return Text(f"""{header}\n{linefeed.join(f"{contextindent}{indentunit}{line[pyyamlindent:]}" for line in lines)}""")
 
 def rootpath(scope, *resolvables):
