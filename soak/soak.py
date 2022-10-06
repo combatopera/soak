@@ -81,3 +81,6 @@ def soak(config, soakroot):
                     diffs.append(partial(lambda soakconfig, origtextfuture, reltarget: soakconfig.diff(origtextfuture.result(), reltarget),
                             soakconfig, executor.submit(soakconfig.origtext, reltarget), reltarget))
             invokeall(diffs)
+
+if '__main__' == __name__:
+    main_soak()
