@@ -20,6 +20,7 @@ from aridity import NoSuchPathException
 from aridity.config import ConfigCtrl
 from aridity.model import Directive, Function, Text
 from aridity.scope import slashfunction
+from aridity.util import dotpy
 from lagoon import git
 from lagoon.program import ONELINE
 from pathlib import Path
@@ -29,7 +30,6 @@ singledigit = re.compile('[0-9]')
 zeroormorespaces = re.compile(' *')
 zeroormoredots = re.compile('[.]*')
 linefeed = '\n'
-dotpy = '.py'
 toplevelres = PathResolvable('toplevel')
 
 def plugin(prefix, suffix, scope):
