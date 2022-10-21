@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
+'Process aridity templates as per all soak.arid configs in directory tree.'
 from . import cpuexecutor
 from .context import createparent
 from .terminal import LogFile, Terminal
@@ -51,8 +52,7 @@ class SoakConfig:
     def diff(self, origtext, reltarget):
         diff._us[print]('--color=always', '-', self.dirpath / reltarget, input = origtext, check = False)
 
-def main_soak():
-    'Process aridity templates as per all soak.arid configs in directory tree.'
+def main():
     parser = ArgumentParser()
     parser.add_argument('-n', action = 'store_true')
     parser.add_argument('-d', action = 'store_true')
@@ -83,4 +83,4 @@ def soak(config, soakroot):
             invokeall(diffs)
 
 if '__main__' == __name__:
-    main_soak()
+    main()
