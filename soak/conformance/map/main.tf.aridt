@@ -1,0 +1,4 @@
+$join($map($(envinfo subenv) subenvkey subenv $.[$(instancekey)_$(subenvkey):
+$join($map($getfrom($(subenv) $(instancekey) src) arnkey arn $(instancekey)_$(arnkey)_$(subenvkey)=$(arn)) $.[
+])]) $.[
+])

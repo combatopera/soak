@@ -74,3 +74,9 @@ class TestConformance(TestCase):
             self.assertEqual(' x\n', info['root']['indentedeol']) # TODO LATER: Also test non-space in indentunit.
             self.assertEqual(' ', info['root']['linear'])
             self.assertEqual('Can report relplug OK and veryrelplug OK.\n', (conformance / 'subdir' / 'verysubdir' / 'report.txt').read_text())
+            self.assertEqual('''core_eranu:
+core_pipeline_eranu=woo
+core_uvavu:
+core_csv_uvavu=yay
+core_pipeline_uvavu=houpla
+''', (conformance / 'map' / 'main.tf').read_text())
