@@ -18,8 +18,12 @@
 soak main.tf
     from = main.tf.aridt
     instancekey = core
-envinfo subenv
-    eranu core src pipeline = woo
-    uvavu core src
-        csv = yay
-        pipeline = houpla
+envinfo
+    lookup
+        eranu core = woo
+        uvavu core = houpla
+    subenv
+        eranu core src pipeline = $(lookup eranu core)
+        uvavu core src
+            csv = yay
+            pipeline = $(lookup uvavu core)
