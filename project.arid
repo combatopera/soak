@@ -18,7 +18,7 @@
 name = soak
 pyversions += 3
 requires +=
-    aridity>=57
+    aridity>=60
     diapyr>=22
     lagoon>=24
     PyYAML>=5.2
