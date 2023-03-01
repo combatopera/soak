@@ -32,10 +32,9 @@ class SoakConfig:
     soakkey = 'soak'
 
     def __init__(self, parent, configpath):
-        ctrl = (-parent).childctrl()
-        ctrl.printf("cwd = %s", configpath.parent.resolve())
-        ctrl.printf(". %s", configpath.name)
-        self.node = ctrl.node
+        self.node = (-parent).childctrl().node
+        self.node.cwd = str(configpath.parent.resolve())
+        (-self.node).printf(". %s", configpath.name)
         self.reltargets = [Path(rt) for rt, _ in (-getattr(self.node, self.soakkey)).scope().resolvables.items()]
         self.dirpath = configpath.parent
 
