@@ -77,12 +77,12 @@ def _toplevel(anydir):
         raise NoSuchPathException('Git property: toplevel')
 
 def createparent(soakroot):
-    ctrl = ConfigCtrl()
-    parent = ctrl.scope()
-    parent['plugin',] = Directive(plugin)
-    parent['|',] = Function(blockliteral)
-    parent['//',] = Function(rootpath)
-    parent['toplevel',] = Snapshot(lambda: _toplevel(soakroot))
-    ctrl.execute('data = $processtemplate$(from)') # XXX: Too easy to accidentally override?
-    ctrl.printf("indentunit = %s", 4 * ' ')
-    return ctrl.node
+    parent = ConfigCtrl().node
+    s = (-parent).scope()
+    s['plugin',] = Directive(plugin)
+    s['|',] = Function(blockliteral)
+    s['//',] = Function(rootpath)
+    s['toplevel',] = Snapshot(lambda: _toplevel(soakroot))
+    (-parent).execute('data = $processtemplate$(from)') # XXX: Too easy to accidentally override?
+    parent.indentunit = 4 * ' '
+    return parent
