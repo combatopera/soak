@@ -15,14 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-from .soak import soak
 from lagoon import git, unzip
+from lagoon.program import Program
 from pathlib import Path
 from shutil import copytree
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
 from unittest import TestCase
-import json, yaml
+import json, os, sys, yaml
 
 class TestConformance(TestCase):
 
@@ -33,7 +32,7 @@ class TestConformance(TestCase):
             # TODO LATER: Ideally do not copy git-ignored files.
             copytree(source, conformance)
             git.init[print](conformance)
-            soak(SimpleNamespace(n = None, d = None, v = None), conformance)
+            Program.text(sys.executable)._m[print]('soak.soak', cwd = conformance, env = dict(PYTHONPATH = os.pathsep.join(map(os.path.abspath, sys.path))))
             with (conformance / 'conf.json').open() as f:
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))
             self.assertEqual('Bad example.', (conformance / 'readme.txt').read_text())
