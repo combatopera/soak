@@ -52,14 +52,15 @@ class SoakConfig:
         diff._us[print]('--color=always', '-', self.dirpath / reltarget, input = origtext, check = False)
 
 def main():
+    logging.basicConfig(format = "[%(levelname)s] %(message)s", level = logging.DEBUG)
     parser = ArgumentParser()
     parser.add_argument('-n', action = 'store_true')
     parser.add_argument('-d', action = 'store_true')
     parser.add_argument('-v', action = 'store_true')
-    soak(parser.parse_args(), Path('.'))
-
-def soak(config, soakroot):
-    logging.basicConfig(format = "[%(levelname)s] %(message)s", level = logging.DEBUG if config.v else logging.INFO)
+    config = parser.parse_args()
+    if not config.v:
+        logging.getLogger().setLevel(logging.INFO)
+    soakroot = Path('.')
     parent = createparent(soakroot)
     soakconfigs = [SoakConfig(parent, p) for p in soakroot.rglob('soak.arid')]
     if not config.n:
