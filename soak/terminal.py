@@ -28,13 +28,21 @@ class AbstractLog:
 
 class Terminal(AbstractLog):
 
-    def __init__(self, height):
-        self.stream.write('\n' * height)
-        self.height = height
+    @property
+    def height(self):
+        return sum(s.height for s in self.sections)
+
+    def __init__(self, sections):
+        self.sections = {s: i for i, s in enumerate(sections)}
+        self.stream.write('\n' * self.height)
+
+    def _off(self, section):
+        index = self.sections[section]
+        return sum(s.height for s, i in self.sections.items() if i < index)
 
     def logimpl(self, section, obj, rev, dark):
         def g():
-            dy = self.height - section.off()
+            dy = self.height - self._off(section)
             yield tput.cuu(dy)
             if rev:
                 yield tput.rev()
@@ -57,15 +65,3 @@ class LogFile(AbstractLog):
 class Section:
 
     height = 1
-
-    def __init__(self, prev):
-        self.prev = prev
-
-    def off(self):
-        off = 0
-        while True:
-            s = self.prev
-            if s is None:
-                return off
-            off += s.height
-            self = s

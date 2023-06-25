@@ -64,14 +64,14 @@ def main():
     parent = createparent(soakroot)
     soakconfigs = [SoakConfig(parent, p) for p in soakroot.rglob('soak.arid')]
     if not config.n:
-        terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs)) if 'TERM' in os.environ else LogFile
+        sections = [Section() for sc in soakconfigs for _ in sc.reltargets]
+        terminal = Terminal(sections) if 'TERM' in os.environ else LogFile
         with cpuexecutor() as executor:
             results = []
-            section = None
+            i = iter(sections)
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    section = Section(section)
-                    log = partial(terminal.log, section)
+                    log = partial(terminal.log, next(i))
                     log(soakconfig.dirpath / reltarget, dark = True)
                     results.append(executor.submit(soakconfig.process, log, reltarget).result)
             invokeall(results)
