@@ -18,7 +18,7 @@
 'Process aridity templates as per all soak.arid configs in directory tree.'
 from . import cpuexecutor
 from .context import createparent
-from .terminal import LogFile, Terminal
+from .terminal import LogFile, Section, Terminal
 from argparse import ArgumentParser
 from diapyr.util import invokeall
 from functools import partial
@@ -67,9 +67,11 @@ def main():
         terminal = Terminal(sum(len(sc.reltargets) for sc in soakconfigs)) if 'TERM' in os.environ else LogFile
         with cpuexecutor() as executor:
             results = []
+            section = None
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    log = partial(terminal.log, len(results))
+                    section = Section(section)
+                    log = partial(terminal.log, section)
                     log(soakconfig.dirpath / reltarget, dark = True)
                     results.append(executor.submit(soakconfig.process, log, reltarget).result)
             invokeall(results)
