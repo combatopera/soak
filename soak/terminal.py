@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-from diapyr.util import singleton
+from diapyr.util import innerclass, singleton
 from lagoon import tput
 import sys
 
@@ -23,21 +23,40 @@ class AbstractLog:
 
     stream = sys.stderr
 
+    @innerclass
+    class Section:
+
+        height = 1
+
+        def log(self, obj, rev = False, dark = False):
+            self.obj = obj
+            self.rev = rev
+            self.dark = dark
+            self.logsection(self)
+
+    def addsection(self):
+        return self.Section()
+
 class Terminal(AbstractLog):
 
     @property
     def height(self):
         return sum(s.height for s in self.sections)
 
-    def __init__(self, sections):
-        self.sections = {s: i for i, s in enumerate(sections)}
-        self.stream.write('\n' * self.height)
+    def __init__(self):
+        self.sections = {}
+
+    def addsection(self):
+        s = super().addsection()
+        self.sections[s] = len(self.sections)
+        self.stream.write('\n' * s.height)
+        return s
 
     def _off(self, section):
         index = self.sections[section]
         return sum(s.height for s, i in self.sections.items() if i < index)
 
-    def log(self, section):
+    def logsection(self, section):
         def g():
             dy = self.height - self._off(section)
             yield tput.cuu(dy)
@@ -55,16 +74,6 @@ class Terminal(AbstractLog):
 @singleton
 class LogFile(AbstractLog):
 
-    def log(self, section):
+    def logsection(self, section):
         if not section.dark:
             print('Damp:' if section.rev else 'Soaked:', section.obj, file = self.stream)
-
-class Section:
-
-    height = 1
-
-    def log(self, terminal, obj, rev = False, dark = False):
-        self.obj = obj
-        self.rev = rev
-        self.dark = dark
-        terminal.log(self)
