@@ -71,7 +71,7 @@ def main():
             i = iter(sections)
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    log = partial(terminal.log, next(i))
+                    log = partial(next(i).log, terminal)
                     log(soakconfig.dirpath / reltarget, dark = True)
                     results.append(executor.submit(soakconfig.process, log, reltarget).result)
             invokeall(results)
