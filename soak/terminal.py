@@ -52,16 +52,15 @@ class Terminal(AbstractLog):
 
     def logsection(self, index, obj, rev, dark):
         def g():
-            dy = sum(s.height for s in islice(self.sections, index, None))
-            yield tput.cuu(dy)
+            dy = sum(s.height for s in islice(self.sections, index + 1, None))
+            yield tput.cuu(1 + dy)
             if rev:
                 yield tput.rev()
             if dark:
                 yield tput.setaf(0)
-            yield str(obj)
-            yield '\r'
-            yield tput.sgr0()
-            yield tput.cud(dy)
+            yield f"{obj}{tput.sgr0()}\n"
+            if dy:
+                yield tput.cud(dy)
         self.stream.write(''.join(g()))
         self.stream.flush()
 
