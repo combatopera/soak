@@ -16,6 +16,7 @@
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
 from diapyr.util import innerclass, singleton
+from itertools import islice
 from lagoon import tput
 import sys
 
@@ -28,43 +29,36 @@ class AbstractLog:
 
         height = 1
 
+        def __init__(self, index):
+            self.index = index
+
         def log(self, obj, rev = False, dark = False):
-            self.obj = obj
-            self.rev = rev
-            self.dark = dark
-            self.logsection(self)
+            self.logsection(self.index, obj, rev, dark)
+
+    def __init__(self):
+        self.sections = []
 
     def addsection(self):
-        return self.Section()
+        s = self.Section(len(self.sections))
+        self.sections.append(s)
+        return s
 
 class Terminal(AbstractLog):
 
-    @property
-    def height(self):
-        return sum(s.height for s in self.sections)
-
-    def __init__(self):
-        self.sections = {}
-
     def addsection(self):
         s = super().addsection()
-        self.sections[s] = len(self.sections)
         self.stream.write('\n' * s.height)
         return s
 
-    def _off(self, section):
-        index = self.sections[section]
-        return sum(s.height for s, i in self.sections.items() if i < index)
-
-    def logsection(self, section):
+    def logsection(self, index, obj, rev, dark):
         def g():
-            dy = self.height - self._off(section)
+            dy = sum(s.height for s in islice(self.sections, index, None))
             yield tput.cuu(dy)
-            if section.rev:
+            if rev:
                 yield tput.rev()
-            if section.dark:
+            if dark:
                 yield tput.setaf(0)
-            yield str(section.obj)
+            yield str(obj)
             yield '\r'
             yield tput.sgr0()
             yield tput.cud(dy)
@@ -74,6 +68,6 @@ class Terminal(AbstractLog):
 @singleton
 class LogFile(AbstractLog):
 
-    def logsection(self, section):
-        if not section.dark:
-            print('Damp:' if section.rev else 'Soaked:', section.obj, file = self.stream)
+    def logsection(self, index, obj, rev, dark):
+        if not dark:
+            print('Damp:' if rev else 'Soaked:', obj, file = self.stream)
