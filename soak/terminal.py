@@ -18,6 +18,7 @@
 from diapyr.util import innerclass, singleton
 from itertools import islice
 from lagoon import tput
+from threading import Lock
 import sys
 
 class AbstractLog:
@@ -27,15 +28,17 @@ class AbstractLog:
     @innerclass
     class Section:
 
-        height = 1
+        height = 0
 
         def __init__(self, index):
             self.index = index
 
         def log(self, obj, rev = False, dark = False):
-            self.logsection(self.index, obj, rev, dark)
+            with self.lock:
+                self.logsection(self, obj, rev, dark)
 
     def __init__(self):
+        self.lock = Lock()
         self.sections = []
 
     def addsection(self):
@@ -45,28 +48,29 @@ class AbstractLog:
 
 class Terminal(AbstractLog):
 
-    def addsection(self):
-        s = super().addsection()
-        self.stream.write('\n' * s.height)
-        return s
-
-    def logsection(self, index, obj, rev, dark):
+    def logsection(self, section, obj, rev, dark):
         def g():
-            dy = sum(s.height for s in islice(self.sections, index + 1, None))
-            yield tput.cuu(1 + dy)
+            if dy:
+                yield tput.cuu(dy)
+            if newh > h:
+                yield tput.il(newh - h)
+            if h:
+                yield tput.cuu(h)
             if rev:
                 yield tput.rev()
             if dark:
                 yield tput.setaf(0)
             yield f"{obj}{tput.sgr0()}\n"
-            if dy:
-                yield tput.cud(dy)
+            yield '\n' * dy
+        newh = 1
+        h = section.height
+        dy = sum(s.height for s in islice(self.sections, section.index + 1, None))
+        section.height = newh
         self.stream.write(''.join(g()))
-        self.stream.flush()
 
 @singleton
 class LogFile(AbstractLog):
 
-    def logsection(self, index, obj, rev, dark):
+    def logsection(self, section, obj, rev, dark):
         if not dark:
             print('Damp:' if rev else 'Soaked:', obj, file = self.stream)
