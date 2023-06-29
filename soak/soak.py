@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from diapyr.util import invokeall
 from functools import partial
 from lagoon import diff
-from lagoon.util import atomic
+from lagoon.util import atomic, mapcm
 from pathlib import Path
 from splut.actor import Spawn
 import logging, os
@@ -66,8 +66,8 @@ def main():
     parent = createparent(soakroot)
     soakconfigs = [SoakConfig(parent, p) for p in soakroot.rglob('soak.arid')]
     if not config.n:
-        with ThreadPoolExecutor(1) as screen:
-            terminal = Spawn(screen)(Terminal() if 'TERM' in os.environ else LogFile)
+        with mapcm(Spawn, ThreadPoolExecutor(1)) as spawn:
+            terminal = spawn(Terminal() if 'TERM' in os.environ else LogFile)
             with cpuexecutor() as executor:
                 results = []
                 for soakconfig in soakconfigs:
