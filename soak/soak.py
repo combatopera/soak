@@ -20,11 +20,13 @@ from . import cpuexecutor
 from .context import createparent
 from .terminal import LogFile, Terminal
 from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor
 from diapyr.util import invokeall
 from functools import partial
 from lagoon import diff
 from lagoon.util import atomic
 from pathlib import Path
+from splut.actor import Spawn
 import logging, os
 
 class SoakConfig:
@@ -64,15 +66,16 @@ def main():
     parent = createparent(soakroot)
     soakconfigs = [SoakConfig(parent, p) for p in soakroot.rglob('soak.arid')]
     if not config.n:
-        terminal = Terminal() if 'TERM' in os.environ else LogFile
-        with cpuexecutor() as executor:
-            results = []
-            for soakconfig in soakconfigs:
-                for reltarget in soakconfig.reltargets:
-                    log = partial(terminal.log, len(results))
-                    log(soakconfig.dirpath / reltarget, dark = True)
-                    results.append(executor.submit(soakconfig.process, log, reltarget).result)
-            invokeall(results)
+        with ThreadPoolExecutor(1) as screen:
+            terminal = Spawn(screen)(Terminal() if 'TERM' in os.environ else LogFile)
+            with cpuexecutor() as executor:
+                results = []
+                for soakconfig in soakconfigs:
+                    for reltarget in soakconfig.reltargets:
+                        log = partial(terminal.log, len(results))
+                        log(soakconfig.dirpath / reltarget, dark = True)
+                        results.append(executor.submit(soakconfig.process, log, reltarget).result)
+                invokeall(results)
     if config.d:
         with cpuexecutor() as executor:
             diffs = []

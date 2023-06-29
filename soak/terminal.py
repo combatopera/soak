@@ -18,7 +18,6 @@
 from diapyr.util import singleton
 from itertools import islice
 from lagoon import tput
-from threading import Lock
 import sys
 
 class AbstractLog:
@@ -35,7 +34,6 @@ class Terminal(AbstractLog):
         height = 0
 
     def __init__(self):
-        self.lock = Lock()
         self.sections = []
 
     def logimpl(self, index, obj, rev, dark):
@@ -52,15 +50,14 @@ class Terminal(AbstractLog):
                 yield tput.setaf(0)
             yield f"{obj}{tput.sgr0()}\n"
             yield '\n' * dy
-        with self.lock:
-            for _ in range(len(self.sections), index + 1):
-                self.sections.append(self.Section())
-            section = self.sections[index]
-            newh = 1
-            h = section.height
-            dy = sum(s.height for s in islice(self.sections, index + 1, None))
-            section.height = newh
-            self.stream.write(''.join(g()))
+        for _ in range(len(self.sections), index + 1):
+            self.sections.append(self.Section())
+        section = self.sections[index]
+        newh = 1
+        h = section.height
+        dy = sum(s.height for s in islice(self.sections, index + 1, None))
+        section.height = newh
+        self.stream.write(''.join(g()))
 
 @singleton
 class LogFile(AbstractLog):
