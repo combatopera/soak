@@ -69,7 +69,7 @@ def main():
             results = []
             for soakconfig in soakconfigs:
                 for reltarget in soakconfig.reltargets:
-                    log = terminal.addsection().log
+                    log = partial(terminal.log, len(results))
                     log(soakconfig.dirpath / reltarget, dark = True)
                     results.append(executor.submit(soakconfig.process, log, reltarget).result)
             invokeall(results)
