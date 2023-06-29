@@ -29,6 +29,8 @@ from pathlib import Path
 from splut.actor import Spawn
 import logging, os
 
+log = logging.getLogger(__name__)
+
 class SoakConfig:
 
     soakkey = 'soak'
@@ -40,12 +42,12 @@ class SoakConfig:
         self.reltargets = [Path(rt) for rt, _ in (-getattr(self.node, self.soakkey)).scope().resolvables.items()]
         self.dirpath = configpath.parent
 
-    def process(self, log, reltarget):
+    def process(self, termlog, reltarget):
         target = self.dirpath / reltarget
-        log(target, rev = True)
+        termlog(target, rev = True)
         with atomic(target) as partpath:
             (-self.node).scope().resolved(self.soakkey, str(reltarget), 'data').writeout(partpath)
-        log(target)
+        termlog(target)
 
     def origtext(self, reltarget):
         return getattr(getattr(self.node, self.soakkey), str(reltarget)).diff
@@ -72,9 +74,9 @@ def main():
                 results = []
                 for soakconfig in soakconfigs:
                     for reltarget in soakconfig.reltargets:
-                        log = partial(terminal.log, len(results))
-                        log(soakconfig.dirpath / reltarget, dark = True)
-                        results.append(executor.submit(soakconfig.process, log, reltarget).result)
+                        termlog = partial(lambda *args, **kwargs: terminal.log(*args, **kwargs).andforget(log), len(results))
+                        termlog(soakconfig.dirpath / reltarget, dark = True)
+                        results.append(executor.submit(soakconfig.process, termlog, reltarget).result)
                 invokeall(results)
     if config.d:
         with cpuexecutor() as executor:
