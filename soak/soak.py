@@ -42,12 +42,12 @@ class SoakConfig:
         self.reltargets = [Path(rt) for rt, _ in (-getattr(self.node, self.soakkey)).scope().resolvables.items()]
         self.dirpath = configpath.parent
 
-    def process(self, termlog, reltarget):
+    def process(self, logandforget, reltarget):
         target = self.dirpath / reltarget
-        termlog(target, rev = True)
+        logandforget(target, rev = True)
         with atomic(target) as partpath:
             (-self.node).scope().resolved(self.soakkey, str(reltarget), 'data').writeout(partpath)
-        termlog(target)
+        logandforget(target)
 
     def origtext(self, reltarget):
         return getattr(getattr(self.node, self.soakkey), str(reltarget)).diff
@@ -74,9 +74,9 @@ def main():
                 results = []
                 for soakconfig in soakconfigs:
                     for reltarget in soakconfig.reltargets:
-                        termlog = partial(lambda *args, **kwargs: terminal.log(*args, **kwargs).andforget(log), len(results))
-                        termlog(soakconfig.dirpath / reltarget, dark = True)
-                        results.append(executor.submit(soakconfig.process, termlog, reltarget).result)
+                        logandforget = partial(lambda *args, **kwargs: terminal.log(*args, **kwargs).andforget(log), len(results))
+                        logandforget(soakconfig.dirpath / reltarget, dark = True)
+                        results.append(executor.submit(soakconfig.process, logandforget, reltarget).result)
                 invokeall(results)
     if config.d:
         with cpuexecutor() as executor:
