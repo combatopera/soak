@@ -37,27 +37,24 @@ class Terminal(AbstractLog):
         self.sections = []
 
     def logimpl(self, index, obj, rev, dark):
-        def g():
-            if dy:
-                yield tput.cuu(dy)
-            if newh > h:
-                yield tput.il(newh - h)
-            if h:
-                yield tput.cuu(h)
-            if rev:
-                yield tput.rev()
-            if dark:
-                yield tput.setaf(0)
-            yield f"{obj}{tput.sgr0()}\n"
-            yield '\n' * dy
         for _ in range(len(self.sections), index + 1):
             self.sections.append(self.Section())
-        section = self.sections[index]
-        newh = 1
-        h = section.height
         dy = sum(s.height for s in islice(self.sections, index + 1, None))
-        section.height = newh
-        self.stream.write(''.join(g()))
+        section = self.sections[index]
+        oldh = section.height
+        section.height = newh = 1
+        if dy:
+            tput.cuu(dy, stdout = self.stream)
+        if newh > oldh:
+            tput.il(newh - oldh, stdout = self.stream)
+        if oldh:
+            tput.cuu(oldh, stdout = self.stream)
+        if rev:
+            tput.rev(stdout = self.stream)
+        if dark:
+            tput.setaf(0, stdout = self.stream)
+        self.stream.write(f"{obj}{tput.sgr0()}\n")
+        self.stream.write('\n' * dy)
 
 @singleton
 class LogFile(AbstractLog):
