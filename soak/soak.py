@@ -68,8 +68,8 @@ def main():
     parent = createparent(soakroot)
     soakconfigs = [SoakConfig(parent, p) for p in soakroot.rglob('soak.arid')]
     if not config.n:
-        with mapcm(Spawn, ThreadPoolExecutor(1)) as spawn:
-            terminal = spawn(Terminal() if 'TERM' in os.environ else LogFile)
+        with mapcm(Spawn, ThreadPoolExecutor(1)) as uispawn:
+            terminal = uispawn(Terminal() if 'TERM' in os.environ else LogFile)
             with cpuexecutor() as executor:
                 results = []
                 for soakconfig in soakconfigs:
