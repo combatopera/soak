@@ -42,7 +42,7 @@ class Terminal(AbstractLog):
         dy = sum(s.height for s in islice(self.sections, index + 1, None))
         section = self.sections[index]
         oldh = section.height
-        section.height = newh = 1
+        section.height = newh = max(1, oldh)
         if dy:
             tput.cuu(dy, stdout = self.stream)
         if newh > oldh:
@@ -54,10 +54,19 @@ class Terminal(AbstractLog):
         if dark:
             tput.setaf(0, stdout = self.stream)
         self.stream.write(f"{obj}{tput.sgr0()}\n")
-        self.stream.write('\n' * dy)
+        self.stream.write('\n' * (newh - 1 + dy))
 
     def log(self, index, stream, line):
+        dy = sum(s.height for s in islice(self.sections, index + 1, None))
+        section = self.sections[index]
+        oldh = section.height
+        section.height = newh = oldh + 1
+        if dy:
+            tput.cuu(dy, stdout = self.stream)
+        if newh > oldh:
+            tput.il(newh - oldh, stdout = self.stream)
         stream.write(line)
+        self.stream.write('\n' * dy)
 
 @singleton
 class LogFile(AbstractLog):
