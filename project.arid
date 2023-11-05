@@ -22,7 +22,6 @@ requires +=
     diapyr>=22
     lagoon>=31
     PyYAML>=5.2
-    splut>=11
 years += 2020
 author = Andrzej Cichocki
 executable = true
