@@ -26,7 +26,7 @@ from functools import partial
 from lagoon import diff
 from lagoon.util import atomic
 from pathlib import Path
-import logging, os
+import logging, os, sys
 
 log = logging.getLogger(__name__)
 
@@ -71,12 +71,12 @@ def main():
                 task = partial(soakconfig.process, reltarget)
                 task.index = len(tasks)
                 task.target = soakconfig.dirpath / reltarget
-                terminal.log(task.index, task.target, dark = True)
+                terminal.head(task.index, task.target, dark = True)
                 tasks.add(task)
-        tasks.started = lambda task: terminal.log(task.index, task.target, rev = True)
-        tasks.stdout = lambda task, line: terminal.log(task.index, line)
-        tasks.stderr = lambda task, line: terminal.log(task.index, line)
-        tasks.stopped = lambda task: terminal.log(task.index, task.target)
+        tasks.started = lambda task: terminal.head(task.index, task.target, rev = True)
+        tasks.stdout = lambda task, line: terminal.log(task.index, sys.stdout, line)
+        tasks.stderr = lambda task, line: terminal.log(task.index, sys.stderr, line)
+        tasks.stopped = lambda task: terminal.head(task.index, task.target)
         tasks.drain(os.cpu_count())
     if config.d:
         with cpuexecutor() as executor:

@@ -24,8 +24,8 @@ class AbstractLog:
 
     stream = sys.stderr
 
-    def log(self, index, obj, rev = False, dark = False):
-        return self.logimpl(index, obj, rev, dark)
+    def head(self, index, obj, rev = False, dark = False):
+        return self.headimpl(index, obj, rev, dark)
 
 class Terminal(AbstractLog):
 
@@ -36,7 +36,7 @@ class Terminal(AbstractLog):
     def __init__(self):
         self.sections = []
 
-    def logimpl(self, index, obj, rev, dark):
+    def headimpl(self, index, obj, rev, dark):
         for _ in range(len(self.sections), index + 1):
             self.sections.append(self.Section())
         dy = sum(s.height for s in islice(self.sections, index + 1, None))
@@ -56,9 +56,15 @@ class Terminal(AbstractLog):
         self.stream.write(f"{obj}{tput.sgr0()}\n")
         self.stream.write('\n' * dy)
 
+    def log(self, index, stream, line):
+        stream.write(line)
+
 @singleton
 class LogFile(AbstractLog):
 
-    def logimpl(self, index, obj, rev, dark):
+    def headimpl(self, index, obj, rev, dark):
         if not dark:
             print('Damp:' if rev else 'Soaked:', obj, file = self.stream)
+
+    def log(self, index, stream, line):
+        stream.write(line)
