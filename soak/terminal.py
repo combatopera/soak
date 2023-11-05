@@ -22,8 +22,6 @@ import sys
 
 class AbstractLog:
 
-    stream = sys.stderr
-
     def head(self, index, obj, rev = False, dark = False):
         return self.headimpl(index, obj, rev, dark)
 
@@ -44,17 +42,17 @@ class Terminal(AbstractLog):
         oldh = section.height
         section.height = newh = max(1, oldh)
         if dy:
-            tput.cuu(dy, stdout = self.stream)
+            tput.cuu(dy, stdout = sys.stderr)
         if newh > oldh:
-            tput.il(newh - oldh, stdout = self.stream)
+            tput.il(newh - oldh, stdout = sys.stderr)
         if oldh:
-            tput.cuu(oldh, stdout = self.stream)
+            tput.cuu(oldh, stdout = sys.stderr)
         if rev:
-            tput.rev(stdout = self.stream)
+            tput.rev(stdout = sys.stderr)
         if dark:
-            tput.setaf(0, stdout = self.stream)
-        self.stream.write(f"{obj}{tput.sgr0()}\n")
-        self.stream.write('\n' * (newh - 1 + dy))
+            tput.setaf(0, stdout = sys.stderr)
+        sys.stderr.write(f"{obj}{tput.sgr0()}\n")
+        sys.stderr.write('\n' * (newh - 1 + dy))
 
     def log(self, index, stream, line):
         dy = sum(s.height for s in islice(self.sections, index + 1, None))
@@ -62,18 +60,18 @@ class Terminal(AbstractLog):
         oldh = section.height
         section.height = newh = oldh + 1
         if dy:
-            tput.cuu(dy, stdout = self.stream)
+            tput.cuu(dy, stdout = sys.stderr)
         if newh > oldh:
-            tput.il(newh - oldh, stdout = self.stream)
+            tput.il(newh - oldh, stdout = sys.stderr)
         stream.write(line)
-        self.stream.write('\n' * dy)
+        sys.stderr.write('\n' * dy)
 
 @singleton
 class LogFile(AbstractLog):
 
     def headimpl(self, index, obj, rev, dark):
         if not dark:
-            print('Damp:' if rev else 'Soaked:', obj, file = self.stream)
+            print('Damp:' if rev else 'Soaked:', obj, file = sys.stderr)
 
     def log(self, index, stream, line):
         stream.write(line)
