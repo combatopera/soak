@@ -18,15 +18,14 @@
 'Process aridity templates as per all soak.arid configs in directory tree.'
 from . import cpuexecutor
 from .context import createparent
+from .multifork import Tasks
 from .terminal import LogFile, Terminal
 from argparse import ArgumentParser
-from concurrent.futures import ThreadPoolExecutor
 from diapyr.util import invokeall
 from functools import partial
 from lagoon import diff
-from lagoon.util import atomic, mapcm
+from lagoon.util import atomic
 from pathlib import Path
-from splut.actor import Spawn
 import logging, os
 
 log = logging.getLogger(__name__)
@@ -42,12 +41,9 @@ class SoakConfig:
         self.reltargets = [Path(rt) for rt, _ in (-getattr(self.node, self.soakkey)).scope().resolvables.items()]
         self.dirpath = configpath.parent
 
-    def process(self, logandforget, reltarget):
-        target = self.dirpath / reltarget
-        logandforget(target, rev = True)
-        with atomic(target) as partpath:
+    def process(self, reltarget):
+        with atomic(self.dirpath / reltarget) as partpath:
             (-self.node).scope().resolved(self.soakkey, str(reltarget), 'data').writeout(partpath)
-        logandforget(target)
 
     def origtext(self, reltarget):
         return getattr(getattr(self.node, self.soakkey), str(reltarget)).diff
@@ -68,16 +64,20 @@ def main():
     parent = createparent(soakroot)
     soakconfigs = [SoakConfig(parent, p) for p in soakroot.rglob('soak.arid')]
     if not config.n:
-        with mapcm(Spawn, ThreadPoolExecutor(1)) as uispawn:
-            terminal = uispawn(Terminal() if 'TERM' in os.environ else LogFile)
-            with cpuexecutor() as executor:
-                results = []
-                for soakconfig in soakconfigs:
-                    for reltarget in soakconfig.reltargets:
-                        logandforget = partial(lambda *args, **kwargs: terminal.log(*args, **kwargs).andforget(log), len(results))
-                        logandforget(soakconfig.dirpath / reltarget, dark = True)
-                        results.append(executor.submit(soakconfig.process, logandforget, reltarget).result)
-                invokeall(results)
+        terminal = Terminal() if 'TERM' in os.environ else LogFile
+        tasks = Tasks()
+        for soakconfig in soakconfigs:
+            for reltarget in soakconfig.reltargets:
+                task = partial(soakconfig.process, reltarget)
+                task.index = len(tasks)
+                task.target = soakconfig.dirpath / reltarget
+                terminal.log(task.index, task.target, dark = True)
+                tasks.add(task)
+        tasks.started = lambda task: terminal.log(task.index, task.target, rev = True)
+        tasks.stdout = lambda task, line: terminal.log(task.index, line)
+        tasks.stderr = lambda task, line: terminal.log(task.index, line)
+        tasks.stopped = lambda task: terminal.log(task.index, task.target)
+        tasks.drain(os.cpu_count())
     if config.d:
         with cpuexecutor() as executor:
             diffs = []
