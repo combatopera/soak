@@ -32,6 +32,7 @@ class Terminal(AbstractLog):
         height = 0
 
     def __init__(self):
+        self.width = int(tput.cols())
         self.sections = []
 
     def headimpl(self, index, obj, rev, dark):
@@ -63,7 +64,10 @@ class Terminal(AbstractLog):
             tput.cuu(dy, stdout = sys.stderr)
         if newh > oldh:
             tput.il(newh - oldh, stdout = sys.stderr)
-        stream.write(line)
+        obj, = line.splitlines()
+        if len(obj) > self.width:
+            obj = f"{obj[:self.width - 1]}\N{HORIZONTAL ELLIPSIS}"
+        stream.write(f"{obj}\n")
         sys.stderr.write('\n' * dy)
 
 @singleton
