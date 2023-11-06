@@ -65,11 +65,20 @@ class Terminal(AbstractLog):
             tput.cuu(dy, stdout = sys.stderr)
         if newh > oldh:
             tput.il(newh - oldh, stdout = sys.stderr)
-        obj, = line.splitlines()
-        if len(obj) > self.width:
-            obj = f"{obj[:self.width - 1]}\N{HORIZONTAL ELLIPSIS}"
-        stream.write(f"{obj}\n")
-        sys.stderr.write('\n' * dy)
+        noeol, = line.splitlines()
+        eol = line[len(noeol):]
+        chunks = [noeol[i:i + self.width] for i in range(0, len(noeol), self.width)]
+        stream.write(chunks[0])
+        for c in islice(chunks, 1, None):
+            stream.flush()
+            tput.hpa(0, stdout = sys.stderr)
+            sys.stderr.flush()
+            stream.write(c)
+        if eol:
+            stream.write(eol)
+        else:
+            stream.flush()
+        sys.stderr.write('\n' * ((not eol) + dy))
 
 @singleton
 class LogFile(AbstractLog):
