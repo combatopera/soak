@@ -32,7 +32,7 @@ class TestConformance(TestCase):
             # TODO LATER: Ideally do not copy git-ignored files.
             copytree(source, conformance)
             git.init[print](conformance)
-            Program.text(sys.executable)._m[print]('soak.soak', cwd = conformance, env = dict(PYTHONPATH = os.pathsep.join(map(os.path.abspath, sys.path))))
+            Program.text(sys.executable)._c[print](f"import sys\nsys.path[:] = {', '.join(repr(os.path.abspath(p)) for p in sys.path)}\nfrom soak.soak import main\nmain()", cwd = conformance)
             with (conformance / 'conf.json').open() as f:
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))
             self.assertEqual('Bad example.', (conformance / 'readme.txt').read_text())
