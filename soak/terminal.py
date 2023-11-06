@@ -36,17 +36,21 @@ class Terminal(AbstractLog):
         self.sections = []
         self.width = width
 
-    def headimpl(self, index, obj, rev, dark):
-        for _ in range(len(self.sections), index + 1):
-            self.sections.append(self.Section())
+    def _common(self, index, tonewh):
         dy = sum(s.height for s in islice(self.sections, index + 1, None))
         section = self.sections[index]
         oldh = section.height
-        section.height = newh = max(1, oldh)
+        section.height = newh = tonewh(oldh)
         if dy:
             tput.cuu(dy, stdout = sys.stderr)
         if newh > oldh:
             tput.il(newh - oldh, stdout = sys.stderr)
+        return dy, oldh, newh
+
+    def headimpl(self, index, obj, rev, dark):
+        for _ in range(len(self.sections), index + 1):
+            self.sections.append(self.Section())
+        dy, oldh, newh = self._common(index, lambda oldh: max(1, oldh))
         if oldh:
             tput.cuu(oldh, stdout = sys.stderr)
         if rev:
@@ -57,14 +61,7 @@ class Terminal(AbstractLog):
         sys.stderr.write('\n' * (newh - 1 + dy))
 
     def log(self, index, stream, line):
-        dy = sum(s.height for s in islice(self.sections, index + 1, None))
-        section = self.sections[index]
-        oldh = section.height
-        section.height = newh = oldh + 1
-        if dy:
-            tput.cuu(dy, stdout = sys.stderr)
-        if newh > oldh:
-            tput.il(newh - oldh, stdout = sys.stderr)
+        dy, oldh, newh = self._common(index, lambda oldh: oldh + 1)
         noeol, = line.splitlines()
         eol = line[len(noeol):]
         chunks = [noeol[i:i + self.width] for i in range(0, len(noeol), self.width)]
