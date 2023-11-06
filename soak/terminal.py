@@ -53,7 +53,7 @@ class Terminal(AbstractLog):
             tput.rev(stdout = sys.stderr)
         if dark:
             tput.setaf(0, stdout = sys.stderr)
-        sys.stderr.write(f"{obj}{tput.sgr0()}\n")
+        sys.stderr.write(f"[{obj}]{tput.sgr0()}\n")
         sys.stderr.write('\n' * (newh - 1 + dy))
 
     def log(self, index, stream, line):
