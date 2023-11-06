@@ -18,6 +18,7 @@
 from diapyr.util import singleton
 from itertools import islice
 from lagoon import tput
+from subprocess import CalledProcessError
 import sys
 
 class AbstractLog:
@@ -31,9 +32,9 @@ class Terminal(AbstractLog):
 
         height = 0
 
-    def __init__(self):
-        self.width = int(tput.cols())
+    def __init__(self, width):
         self.sections = []
+        self.width = width
 
     def headimpl(self, index, obj, rev, dark):
         for _ in range(len(self.sections), index + 1):
@@ -79,3 +80,10 @@ class LogFile(AbstractLog):
 
     def log(self, index, stream, line):
         stream.write(line)
+
+def getterminal():
+    try:
+        width = int(tput.cols())
+    except CalledProcessError:
+        return LogFile
+    return Terminal(width)

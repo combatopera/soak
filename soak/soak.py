@@ -19,7 +19,7 @@
 from . import cpuexecutor
 from .context import createparent
 from .multifork import Tasks
-from .terminal import LogFile, Terminal
+from .terminal import getterminal
 from argparse import ArgumentParser
 from diapyr.util import invokeall
 from functools import partial
@@ -64,7 +64,7 @@ def main():
     parent = createparent(soakroot)
     soakconfigs = [SoakConfig(parent, p) for p in soakroot.rglob('soak.arid')]
     if not config.n:
-        terminal = Terminal() if 'TERM' in os.environ else LogFile
+        terminal = getterminal()
         tasks = Tasks()
         for soakconfig in soakconfigs:
             for reltarget in soakconfig.reltargets:
