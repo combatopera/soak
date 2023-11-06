@@ -50,7 +50,7 @@ class Terminal(AbstractLog):
     def headimpl(self, index, obj, rev, dark):
         for _ in range(len(self.sections), index + 1):
             self.sections.append(self.Section())
-        dy, oldh, newh = self._common(index, lambda oldh: max(1, oldh))
+        dy, oldh, newh = self._common(index, lambda h: max(1, h))
         if oldh:
             tput.cuu(oldh, stdout = sys.stderr)
         if rev:
@@ -61,7 +61,7 @@ class Terminal(AbstractLog):
         sys.stderr.write('\n' * (newh - 1 + dy))
 
     def log(self, index, stream, line):
-        dy, oldh, newh = self._common(index, lambda oldh: oldh + 1)
+        dy, oldh, newh = self._common(index, lambda h: h + 1)
         noeol, = line.splitlines()
         eol = line[len(noeol):]
         chunks = [noeol[i:i + self.width] for i in range(0, len(noeol), self.width)]
