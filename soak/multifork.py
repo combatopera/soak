@@ -55,10 +55,10 @@ def _start(task, index):
     os.dup2(w2, 2)
     os.close(w2)
     try:
-        r = GoodResult(task())
+        obj = GoodResult(task())
     except BaseException as e:
-        r = BadResult(e)
-    os.write(wx, b64encode(pickle.dumps([index, r])))
+        obj = BadResult(e)
+    os.write(wx, b64encode(pickle.dumps([index, obj])))
     sys.exit()
 
 class Tasks:
@@ -74,8 +74,8 @@ class Tasks:
 
     def drain(self, limit):
         def report(task, line):
-            index, r = pickle.loads(b64decode(line))
-            results[index] = r.get
+            index, obj = pickle.loads(b64decode(line))
+            results[index] = obj.get
         pids = {}
         streams = {}
         running = {}
