@@ -20,7 +20,6 @@ from lagoon import git, unzip
 from lagoon.program import Program
 from pathlib import Path
 from shutil import copytree
-from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 import json, os, sys, yaml
@@ -28,18 +27,18 @@ import json, os, sys, yaml
 class TestConformance(TestCase):
 
     @contextmanager
-    def _soak(self, name):
+    def _soak(self, name, returncode):
         source = Path(__file__).parent / name
         with TemporaryDirectory() as tempdir:
             conformance = Path(tempdir, name)
             # TODO LATER: Ideally do not copy git-ignored files.
             copytree(source, conformance)
             git.init[print](conformance)
-            Program.text(sys.executable)._c[print](f"import sys\nsys.path[:] = {', '.join(repr(os.path.abspath(p)) for p in sys.path)}\nfrom soak.soak import main\nmain()", cwd = conformance)
+            self.assertEqual(returncode, Program.text(sys.executable)._c[print](f"import sys\nsys.path[:] = {', '.join(repr(os.path.abspath(p)) for p in sys.path)}\nfrom soak.soak import main\nmain()", cwd = conformance, check = False))
             yield conformance
 
     def test_works(self):
-        with self._soak('conformance') as conformance:
+        with self._soak('conformance', 0) as conformance:
             with (conformance / 'conf.json').open() as f:
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))
             self.assertEqual('Bad example.', (conformance / 'readme.txt').read_text())
@@ -88,5 +87,5 @@ core_pipeline_uvavu=houpla
 ''', (conformance / 'map' / 'main.tf').read_text())
 
     def test_propagatefailure(self):
-        with self.assertRaises(CalledProcessError), self._soak('conformance2'):
-            self.fail('Should not succeed.')
+        with self._soak('conformance2', 1) as conformance2:
+            self.assertEqual('warp me\n', (conformance2 / 'bar').read_text())
