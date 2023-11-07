@@ -40,9 +40,9 @@ class Job:
 
     ttl = 3
 
-    def __init__(self, task, index):
-        self.task = task
+    def __init__(self, index, task):
         self.index = index
+        self.task = task
 
     def start(self):
         r1, w1 = os.pipe()
@@ -82,14 +82,12 @@ class Tasks(list):
         def report(task, line):
             index, obj = pickle.loads(b64decode(line))
             results[index] = obj.get
-        cursor = 0
         streams = {}
         running = 0
         results = [None] * len(self)
         while self or streams:
             while self and running < limit:
-                job = Job(self.pop(0), cursor)
-                cursor += 1
+                job = Job(len(results) - len(self), self.pop(0))
                 r1, r2, rx = job.start()
                 streams[r1] = job, self.stdout
                 streams[r2] = job, self.stderr
