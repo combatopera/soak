@@ -15,25 +15,50 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
+from base64 import b64decode, b64encode
+from diapyr.util import invokeall
 from functools import partial
 from select import select
-import os, sys
+import os, pickle, sys
+
+class GoodResult:
+
+    def __init__(self, value):
+        self.value = value
+
+    def get(self):
+        return self.value
+
+class BadResult:
+
+    def __init__(self, exception):
+        self.exception = exception
+
+    def get(self):
+        raise self.exception
 
 def _start(task):
     r1, w1 = os.pipe()
     r2, w2 = os.pipe()
+    rx, wx = os.pipe()
     pid = os.fork()
     if pid:
         os.close(w1)
         os.close(w2)
-        return map(os.fdopen, [r1, r2])
+        os.close(wx)
+        return map(os.fdopen, [r1, r2, rx])
     os.close(r1)
     os.close(r2)
+    os.close(rx)
     os.dup2(w1, 1)
     os.close(w1)
     os.dup2(w2, 2)
     os.close(w2)
-    task()
+    try:
+        r = GoodResult(task())
+    except BaseException as e:
+        r = BadResult(e)
+    os.write(wx, b64encode(pickle.dumps(r)))
     sys.exit()
 
 class Tasks:
@@ -48,15 +73,19 @@ class Tasks:
         return len(self.waiting)
 
     def drain(self, limit):
+        def report(task, line):
+            results.append(pickle.loads(b64decode(line)).get) # TODO: Preserve order.
         streams = {}
         running = {}
+        results = []
         while self.waiting or streams:
             while self.waiting and len(running) < limit:
                 task = self.waiting.pop(0)
-                r1, r2 = _start(task)
+                r1, r2, rx = _start(task)
                 streams[r1] = self.stdout, task
                 streams[r2] = self.stderr, task
-                running[task] = 2
+                streams[rx] = report, task
+                running[task] = 3
                 self.started(task)
             for r in select(streams, [], [])[0]:
                 line = r.readline()
@@ -70,7 +99,9 @@ class Tasks:
                         running[task] = ttl
                     else:
                         running.pop(task)
+                        # TODO: Read returncode.
                         self.stopped(task)
+        return invokeall(results)
 
     def started(self, task):
         pass
