@@ -38,6 +38,8 @@ class BadResult:
 
 class Job:
 
+    ttl = 3
+
     def __init__(self, task, index):
         self.task = task
         self.index = index
@@ -67,6 +69,10 @@ class Job:
         os.write(wx, b64encode(pickle.dumps([self.index, obj])))
         sys.exit()
 
+    def decr(self):
+        self.ttl = ttl = self.ttl - 1
+        return not ttl
+
     def join(self):
         os.waitpid(self.pid, 0)
 
@@ -78,17 +84,17 @@ class Tasks(list):
             results[index] = obj.get
         cursor = 0
         streams = {}
-        running = {}
+        running = 0
         results = [None] * len(self)
         while self or streams:
-            while self and len(running) < limit:
+            while self and running < limit:
                 job = Job(self.pop(0), cursor)
                 cursor += 1
                 r1, r2, rx = job.start()
                 streams[r1] = job, self.stdout
                 streams[r2] = job, self.stderr
                 streams[rx] = job, report
-                running[job] = 3
+                running += 1
                 self.started(job.task)
             for r in select(streams, [], [])[0]:
                 line = r.readline()
@@ -98,11 +104,8 @@ class Tasks(list):
                 else:
                     job = streams.pop(r)[0]
                     r.close()
-                    ttl = running[job] - 1
-                    if ttl:
-                        running[job] = ttl
-                    else:
-                        running.pop(job)
+                    if job.decr():
+                        running -= 1
                         job.join()
                         self.stopped(job.task)
         return invokeall(results)
