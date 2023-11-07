@@ -46,7 +46,7 @@ def _start(task):
         os.close(w1)
         os.close(w2)
         os.close(wx)
-        return map(os.fdopen, [r1, r2, rx])
+        return [pid, *map(os.fdopen, [r1, r2, rx])]
     os.close(r1)
     os.close(r2)
     os.close(rx)
@@ -75,13 +75,15 @@ class Tasks:
     def drain(self, limit):
         def report(task, line):
             results.append(pickle.loads(b64decode(line)).get) # TODO: Preserve order.
+        pids = {}
         streams = {}
         running = {}
         results = []
         while self.waiting or streams:
             while self.waiting and len(running) < limit:
                 task = self.waiting.pop(0)
-                r1, r2, rx = _start(task)
+                pid, r1, r2, rx = _start(task)
+                pids[task] = pid
                 streams[r1] = self.stdout, task
                 streams[r2] = self.stderr, task
                 streams[rx] = report, task
@@ -99,7 +101,7 @@ class Tasks:
                         running[task] = ttl
                     else:
                         running.pop(task)
-                        # TODO: Read returncode.
+                        os.waitpid(pids[task], 0)
                         self.stopped(task)
         return invokeall(results)
 
