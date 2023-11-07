@@ -51,7 +51,8 @@ class Job:
             os.close(w1)
             os.close(w2)
             os.close(wx)
-            return [pid, *map(os.fdopen, [r1, r2, rx])]
+            self.pid = pid
+            return map(os.fdopen, [r1, r2, rx])
         os.close(r1)
         os.close(r2)
         os.close(rx)
@@ -66,21 +67,24 @@ class Job:
         os.write(wx, b64encode(pickle.dumps([self.index, obj])))
         sys.exit()
 
+    def join(self):
+        os.waitpid(self.pid, 0)
+
 class Tasks(list):
 
     def drain(self, limit):
         def report(task, line):
             index, obj = pickle.loads(b64decode(line))
             results[index] = obj.get
-        pids = {}
+        cursor = 0
         streams = {}
         running = {}
         results = [None] * len(self)
         while self or streams:
             while self and len(running) < limit:
-                job = Job(self.pop(0), len(pids))
-                pid, r1, r2, rx = job.start()
-                pids[job] = pid
+                job = Job(self.pop(0), cursor)
+                cursor += 1
+                r1, r2, rx = job.start()
                 streams[r1] = job, self.stdout
                 streams[r2] = job, self.stderr
                 streams[rx] = job, report
@@ -99,7 +103,7 @@ class Tasks(list):
                         running[job] = ttl
                     else:
                         running.pop(job)
-                        os.waitpid(pids[job], 0)
+                        job.join()
                         self.stopped(job.task)
         return invokeall(results)
 
