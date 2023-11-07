@@ -17,7 +17,6 @@
 
 from base64 import b64decode, b64encode
 from diapyr.util import invokeall
-from functools import partial
 from select import select
 import os, pickle, sys
 
@@ -61,6 +60,11 @@ def _start(task, index):
     os.write(wx, b64encode(pickle.dumps([index, obj])))
     sys.exit()
 
+class Task:
+
+    def __init__(self, t):
+        self.t = t
+
 class Tasks:
 
     def __init__(self):
@@ -82,18 +86,19 @@ class Tasks:
         results = [None] * len(self.waiting)
         while self.waiting or streams:
             while self.waiting and len(running) < limit:
-                task = self.waiting.pop(0)
-                pid, r1, r2, rx = _start(task, len(pids))
+                task = Task(self.waiting.pop(0))
+                pid, r1, r2, rx = _start(task.t, len(pids))
                 pids[task] = pid
                 streams[r1] = self.stdout, task
                 streams[r2] = self.stderr, task
                 streams[rx] = report, task
                 running[task] = 3
-                self.started(task)
+                self.started(task.t)
             for r in select(streams, [], [])[0]:
                 line = r.readline()
                 if line:
-                    partial(*streams[r])(line)
+                    f, task = streams[r]
+                    f(task.t, line)
                 else:
                     task = streams.pop(r)[1]
                     r.close()
@@ -103,7 +108,7 @@ class Tasks:
                     else:
                         running.pop(task)
                         os.waitpid(pids[task], 0)
-                        self.stopped(task)
+                        self.stopped(task.t)
         return invokeall(results)
 
     def started(self, task):
