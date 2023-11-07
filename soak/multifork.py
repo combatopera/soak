@@ -65,16 +65,7 @@ class Job:
     def __init__(self, task):
         self.task = task
 
-class Tasks:
-
-    def __init__(self):
-        self.waiting = []
-
-    def add(self, task):
-        self.waiting.append(task)
-
-    def __len__(self):
-        return len(self.waiting)
+class Tasks(list):
 
     def drain(self, limit):
         def report(task, line):
@@ -83,10 +74,10 @@ class Tasks:
         pids = {}
         streams = {}
         running = {}
-        results = [None] * len(self.waiting)
-        while self.waiting or streams:
-            while self.waiting and len(running) < limit:
-                job = Job(self.waiting.pop(0))
+        results = [None] * len(self)
+        while self or streams:
+            while self and len(running) < limit:
+                job = Job(self.pop(0))
                 pid, r1, r2, rx = _start(job.task, len(pids))
                 pids[job] = pid
                 streams[r1] = job, self.stdout

@@ -72,7 +72,7 @@ def main():
                 task.index = len(tasks)
                 task.target = soakconfig.dirpath / reltarget
                 terminal.head(task.index, task.target, dark = True)
-                tasks.add(task)
+                tasks.append(task)
         tasks.started = lambda task: terminal.head(task.index, task.target, rev = True)
         tasks.stdout = lambda task, line: terminal.log(task.index, sys.stdout, line)
         tasks.stderr = lambda task, line: terminal.log(task.index, sys.stderr, line)
