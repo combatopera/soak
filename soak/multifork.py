@@ -38,10 +38,11 @@ class BadResult:
 
 class Job:
 
-    def __init__(self, task):
+    def __init__(self, task, index):
         self.task = task
+        self.index = index
 
-    def start(self, index):
+    def start(self):
         r1, w1 = os.pipe()
         r2, w2 = os.pipe()
         rx, wx = os.pipe()
@@ -62,7 +63,7 @@ class Job:
             obj = GoodResult(self.task())
         except BaseException as e:
             obj = BadResult(e)
-        os.write(wx, b64encode(pickle.dumps([index, obj])))
+        os.write(wx, b64encode(pickle.dumps([self.index, obj])))
         sys.exit()
 
 class Tasks(list):
@@ -77,8 +78,8 @@ class Tasks(list):
         results = [None] * len(self)
         while self or streams:
             while self and len(running) < limit:
-                job = Job(self.pop(0))
-                pid, r1, r2, rx = job.start(len(pids))
+                job = Job(self.pop(0), len(pids))
+                pid, r1, r2, rx = job.start()
                 pids[job] = pid
                 streams[r1] = job, self.stdout
                 streams[r2] = job, self.stderr
