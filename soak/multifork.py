@@ -36,34 +36,34 @@ class BadResult:
     def get(self):
         raise self.exception
 
-def _start(task, index):
-    r1, w1 = os.pipe()
-    r2, w2 = os.pipe()
-    rx, wx = os.pipe()
-    pid = os.fork()
-    if pid:
-        os.close(w1)
-        os.close(w2)
-        os.close(wx)
-        return [pid, *map(os.fdopen, [r1, r2, rx])]
-    os.close(r1)
-    os.close(r2)
-    os.close(rx)
-    os.dup2(w1, 1)
-    os.close(w1)
-    os.dup2(w2, 2)
-    os.close(w2)
-    try:
-        obj = GoodResult(task())
-    except BaseException as e:
-        obj = BadResult(e)
-    os.write(wx, b64encode(pickle.dumps([index, obj])))
-    sys.exit()
-
 class Job:
 
     def __init__(self, task):
         self.task = task
+
+    def start(self, index):
+        r1, w1 = os.pipe()
+        r2, w2 = os.pipe()
+        rx, wx = os.pipe()
+        pid = os.fork()
+        if pid:
+            os.close(w1)
+            os.close(w2)
+            os.close(wx)
+            return [pid, *map(os.fdopen, [r1, r2, rx])]
+        os.close(r1)
+        os.close(r2)
+        os.close(rx)
+        os.dup2(w1, 1)
+        os.close(w1)
+        os.dup2(w2, 2)
+        os.close(w2)
+        try:
+            obj = GoodResult(self.task())
+        except BaseException as e:
+            obj = BadResult(e)
+        os.write(wx, b64encode(pickle.dumps([index, obj])))
+        sys.exit()
 
 class Tasks(list):
 
@@ -78,7 +78,7 @@ class Tasks(list):
         while self or streams:
             while self and len(running) < limit:
                 job = Job(self.pop(0))
-                pid, r1, r2, rx = _start(job.task, len(pids))
+                pid, r1, r2, rx = job.start(len(pids))
                 pids[job] = pid
                 streams[r1] = job, self.stdout
                 streams[r2] = job, self.stderr
