@@ -37,7 +37,7 @@ class BadResult:
     def get(self):
         raise self.exception
 
-def _start(task):
+def _start(task, index):
     r1, w1 = os.pipe()
     r2, w2 = os.pipe()
     rx, wx = os.pipe()
@@ -58,7 +58,7 @@ def _start(task):
         r = GoodResult(task())
     except BaseException as e:
         r = BadResult(e)
-    os.write(wx, b64encode(pickle.dumps(r)))
+    os.write(wx, b64encode(pickle.dumps([index, r])))
     sys.exit()
 
 class Tasks:
@@ -74,15 +74,16 @@ class Tasks:
 
     def drain(self, limit):
         def report(task, line):
-            results.append(pickle.loads(b64decode(line)).get) # TODO: Preserve order.
+            index, r = pickle.loads(b64decode(line))
+            results[index] = r.get
         pids = {}
         streams = {}
         running = {}
-        results = []
+        results = [None] * len(self.waiting)
         while self.waiting or streams:
             while self.waiting and len(running) < limit:
                 task = self.waiting.pop(0)
-                pid, r1, r2, rx = _start(task)
+                pid, r1, r2, rx = _start(task, len(pids))
                 pids[task] = pid
                 streams[r1] = self.stdout, task
                 streams[r2] = self.stderr, task
