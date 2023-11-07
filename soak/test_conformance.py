@@ -20,6 +20,7 @@ from lagoon import git, unzip
 from lagoon.program import Program
 from pathlib import Path
 from shutil import copytree
+from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 import json, os, sys, yaml
@@ -87,5 +88,5 @@ core_pipeline_uvavu=houpla
 ''', (conformance / 'map' / 'main.tf').read_text())
 
     def test_propagatefailure(self):
-        with self._soak('conformance2'):
+        with self.assertRaises(CalledProcessError), self._soak('conformance2'):
             self.fail('Should not succeed.')
