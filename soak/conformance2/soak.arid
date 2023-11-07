@@ -17,5 +17,6 @@
 
 soak
     foo from = foo.aridt
+    foo2 from = no-such-file.aridt
     bar from = bar.aridt
-yes such path = hello
+yes such path = warp me
