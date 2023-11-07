@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
+from contextlib import contextmanager
 from lagoon import git, unzip
 from lagoon.program import Program
 from pathlib import Path
@@ -25,14 +26,19 @@ import json, os, sys, yaml
 
 class TestConformance(TestCase):
 
-    def test_works(self):
-        source = Path(__file__).parent / 'conformance'
+    @contextmanager
+    def _soak(self, name):
+        source = Path(__file__).parent / name
         with TemporaryDirectory() as tempdir:
-            conformance = Path(tempdir, source.name)
+            conformance = Path(tempdir, name)
             # TODO LATER: Ideally do not copy git-ignored files.
             copytree(source, conformance)
             git.init[print](conformance)
             Program.text(sys.executable)._c[print](f"import sys\nsys.path[:] = {', '.join(repr(os.path.abspath(p)) for p in sys.path)}\nfrom soak.soak import main\nmain()", cwd = conformance)
+            yield conformance
+
+    def test_works(self):
+        with self._soak('conformance') as conformance:
             with (conformance / 'conf.json').open() as f:
                 self.assertEqual(dict(mydata = 'hello there'), json.load(f))
             self.assertEqual('Bad example.', (conformance / 'readme.txt').read_text())
@@ -79,3 +85,7 @@ core_uvavu:
 core_csv_uvavu=yay
 core_pipeline_uvavu=houpla
 ''', (conformance / 'map' / 'main.tf').read_text())
+
+    def test_propagatefailure(self):
+        with self._soak('conformance2'):
+            self.fail('Should not succeed.')
