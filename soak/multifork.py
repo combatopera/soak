@@ -60,10 +60,10 @@ def _start(task, index):
     os.write(wx, b64encode(pickle.dumps([index, obj])))
     sys.exit()
 
-class Task:
+class Job:
 
-    def __init__(self, t):
-        self.t = t
+    def __init__(self, task):
+        self.task = task
 
 class Tasks:
 
@@ -86,29 +86,29 @@ class Tasks:
         results = [None] * len(self.waiting)
         while self.waiting or streams:
             while self.waiting and len(running) < limit:
-                task = Task(self.waiting.pop(0))
-                pid, r1, r2, rx = _start(task.t, len(pids))
-                pids[task] = pid
-                streams[r1] = self.stdout, task
-                streams[r2] = self.stderr, task
-                streams[rx] = report, task
-                running[task] = 3
-                self.started(task.t)
+                job = Job(self.waiting.pop(0))
+                pid, r1, r2, rx = _start(job.task, len(pids))
+                pids[job] = pid
+                streams[r1] = job, self.stdout
+                streams[r2] = job, self.stderr
+                streams[rx] = job, report
+                running[job] = 3
+                self.started(job.task)
             for r in select(streams, [], [])[0]:
                 line = r.readline()
                 if line:
-                    f, task = streams[r]
-                    f(task.t, line)
+                    job, callback = streams[r]
+                    callback(job.task, line)
                 else:
-                    task = streams.pop(r)[1]
+                    job = streams.pop(r)[0]
                     r.close()
-                    ttl = running[task] - 1
+                    ttl = running[job] - 1
                     if ttl:
-                        running[task] = ttl
+                        running[job] = ttl
                     else:
-                        running.pop(task)
-                        os.waitpid(pids[task], 0)
-                        self.stopped(task.t)
+                        running.pop(job)
+                        os.waitpid(pids[job], 0)
+                        self.stopped(job.task)
         return invokeall(results)
 
     def started(self, task):
