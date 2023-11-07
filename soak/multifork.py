@@ -71,10 +71,9 @@ class Job:
 
     def decr(self):
         self.ttl = ttl = self.ttl - 1
-        return not ttl
-
-    def join(self):
-        os.waitpid(self.pid, 0)
+        if not ttl:
+            os.waitpid(self.pid, 0)
+            return True
 
 class Tasks(list):
 
@@ -104,7 +103,6 @@ class Tasks(list):
                     r.close()
                     if job.decr():
                         running -= 1
-                        job.join()
                         self.stopped(job.task)
         return invokeall(results)
 
