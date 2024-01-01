@@ -39,17 +39,18 @@ class BadResult:
         self.exception = exception
 
     def __getstate__(self):
-        state = self.__dict__.copy()
         c = self.exception.__context__
-        state['context'] = None if c is None else self._of(c)
-        state['tb'] = Traceback(self.exception.__traceback__)
-        return state
+        return dict(
+            context = None if c is None else self._of(c),
+            exception = self.exception,
+            tb = Traceback(self.exception.__traceback__),
+        )
 
     def __setstate__(self, state):
-        self.__dict__.update(state)
-        c = self.context
-        self.exception.__context__ = None if c is None else c.exception
-        self.exception.__traceback__ = self.tb.as_traceback()
+        self.exception = e = state['exception']
+        c = state['context']
+        e.__context__ = None if c is None else c.exception
+        e.__traceback__ = state['tb'].as_traceback()
 
     def get(self):
         raise self.exception
