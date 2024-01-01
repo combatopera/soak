@@ -31,12 +31,20 @@ class GoodResult:
 
 class BadResult:
 
+    @classmethod
+    def _of(cls, *args):
+        return cls(*args)
+
     def __init__(self, exception):
+        c = exception.__context__
+        self.context = None if c is None else self._of(c)
         self.tb = Traceback(exception.__traceback__)
         self.exception = exception
 
     def __setstate__(self, state):
         self.__dict__.update(state)
+        c = self.context
+        self.exception.__context__ = None if c is None else c.exception
         self.exception.__traceback__ = self.tb.as_traceback()
 
     def get(self):
