@@ -64,13 +64,14 @@ class Terminal(AbstractLog):
         dy, oldh, newh = self._common(index, lambda h: h + 1)
         noeol, = line.splitlines()
         eol = line[len(noeol):]
-        chunks = [noeol[i:i + self.width] for i in range(0, len(noeol), self.width)]
-        stream.write(chunks[0])
-        for c in islice(chunks, 1, None):
-            stream.flush()
-            tput.hpa(0, stdout = sys.stderr)
-            sys.stderr.flush()
-            stream.write(c)
+        if noeol:
+            chunks = [noeol[i:i + self.width] for i in range(0, len(noeol), self.width)]
+            stream.write(chunks[0])
+            for c in islice(chunks, 1, None):
+                stream.flush()
+                tput.hpa(0, stdout = sys.stderr)
+                sys.stderr.flush()
+                stream.write(c)
         if eol:
             stream.write(eol)
         else:
