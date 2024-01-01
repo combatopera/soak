@@ -18,6 +18,7 @@
 from base64 import b64decode, b64encode
 from diapyr.util import invokeall
 from select import select
+from tblib import Traceback
 import os, pickle, sys
 
 class GoodResult:
@@ -31,7 +32,12 @@ class GoodResult:
 class BadResult:
 
     def __init__(self, exception):
+        self.tb = Traceback(exception.__traceback__)
         self.exception = exception
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.exception.__traceback__ = self.tb.as_traceback()
 
     def get(self):
         raise self.exception
