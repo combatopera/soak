@@ -36,10 +36,14 @@ class BadResult:
         return cls(*args)
 
     def __init__(self, exception):
-        c = exception.__context__
-        self.context = None if c is None else self._of(c)
-        self.tb = Traceback(exception.__traceback__)
         self.exception = exception
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        c = self.exception.__context__
+        state['context'] = None if c is None else self._of(c)
+        state['tb'] = Traceback(self.exception.__traceback__)
+        return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
