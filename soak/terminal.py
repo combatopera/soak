@@ -89,7 +89,7 @@ class LogFile:
     words = {
         Style.running: 'Damp',
         Style.normal: 'Soaked',
-        Style.abrupt: 'Washed',
+        Style.abrupt: 'Failed',
     }
 
     def head(self, index, obj, style):
