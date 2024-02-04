@@ -26,6 +26,7 @@ class Style:
     pending = object()
     running = object()
     normal = object()
+    abrupt = object()
 
 class Terminal:
 
@@ -58,6 +59,9 @@ class Terminal:
             tput.setaf(0, stdout = sys.stderr)
         elif Style.running == style:
             tput.rev(stdout = sys.stderr)
+        elif Style.abrupt == style:
+            tput.setab(1, stdout = sys.stderr)
+            tput.setaf(7, stdout = sys.stderr)
         sys.stderr.write(f"[{obj}]{tput.sgr0()}\n")
         sys.stderr.write('\n' * (newh - 1 + dy))
 
@@ -85,6 +89,7 @@ class LogFile:
     words = {
         Style.running: 'Damp',
         Style.normal: 'Soaked',
+        Style.abrupt: 'Washed',
     }
 
     def head(self, index, obj, style):

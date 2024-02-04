@@ -83,16 +83,18 @@ class Job:
         os.close(w2)
         try:
             obj = GoodResult(self.task())
+            code = 0
         except BaseException as e:
             obj = BadResult(e)
+            code = 1
         os.write(wx, b64encode(pickle.dumps([self.index, obj])))
-        sys.exit()
+        sys.exit(code)
 
     def decr(self):
         self.ttl = ttl = self.ttl - 1
         if not ttl:
-            os.waitpid(self.pid, 0)
-            return True
+            s = os.waitpid(self.pid, 0)[1]
+            return -os.WTERMSIG(s) if os.WIFSIGNALED(s) else os.WEXITSTATUS(s)
 
 class Tasks(list):
 
@@ -120,9 +122,10 @@ class Tasks(list):
                 else:
                     job = streams.pop(r)[0]
                     r.close()
-                    if job.decr():
+                    code = job.decr()
+                    if code is not None:
                         running -= 1
-                        self.stopped(job.task)
+                        self.stopped(job.task, code)
         return invokeall(results)
 
     def started(self, task):
@@ -134,5 +137,5 @@ class Tasks(list):
     def stderr(self, task, line):
         pass
 
-    def stopped(self, task):
+    def stopped(self, task, code):
         pass

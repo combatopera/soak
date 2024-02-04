@@ -76,7 +76,7 @@ def main():
         tasks.started = lambda task: terminal.head(task.index, task.target, Style.running)
         tasks.stdout = lambda task, line: terminal.log(task.index, sys.stdout, line)
         tasks.stderr = lambda task, line: terminal.log(task.index, sys.stderr, line)
-        tasks.stopped = lambda task: terminal.head(task.index, task.target, Style.normal)
+        tasks.stopped = lambda task, code: terminal.head(task.index, task.target, Style.abrupt if code else Style.normal)
         tasks.drain(os.cpu_count())
     if config.d:
         with cpuexecutor() as executor:
