@@ -21,12 +21,13 @@ from lagoon import tput
 from subprocess import CalledProcessError
 import sys
 
-class AbstractLog:
+class Style:
 
-    def head(self, index, obj, rev = False, dark = False):
-        return self.headimpl(index, obj, rev, dark)
+    pending = object()
+    running = object()
+    normal = object()
 
-class Terminal(AbstractLog):
+class Terminal:
 
     class Section:
 
@@ -47,16 +48,16 @@ class Terminal(AbstractLog):
             tput.il(newh - oldh, stdout = sys.stderr)
         return dy, oldh, newh
 
-    def headimpl(self, index, obj, rev, dark):
+    def head(self, index, obj, style):
         for _ in range(len(self.sections), index + 1):
             self.sections.append(self.Section())
         dy, oldh, newh = self._common(index, lambda h: max(1, h))
         if oldh:
             tput.cuu(oldh, stdout = sys.stderr)
-        if rev:
-            tput.rev(stdout = sys.stderr)
-        if dark:
+        if Style.pending == style:
             tput.setaf(0, stdout = sys.stderr)
+        elif Style.running == style:
+            tput.rev(stdout = sys.stderr)
         sys.stderr.write(f"[{obj}]{tput.sgr0()}\n")
         sys.stderr.write('\n' * (newh - 1 + dy))
 
@@ -79,11 +80,19 @@ class Terminal(AbstractLog):
         sys.stderr.write('\n' * ((not eol) + dy))
 
 @singleton
-class LogFile(AbstractLog):
+class LogFile:
 
-    def headimpl(self, index, obj, rev, dark):
-        if not dark:
-            print('Damp:' if rev else 'Soaked:', obj, file = sys.stderr)
+    words = {
+        Style.running: 'Damp',
+        Style.normal: 'Soaked',
+    }
+
+    def head(self, index, obj, style):
+        try:
+            word = self.words[style]
+        except KeyError:
+            return
+        print(f"{word}:", obj, file = sys.stderr)
 
     def log(self, index, stream, line):
         stream.write(line)

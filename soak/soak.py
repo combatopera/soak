@@ -19,7 +19,7 @@
 from . import cpuexecutor
 from .context import createparent
 from .multifork import Tasks
-from .terminal import getterminal
+from .terminal import getterminal, Style
 from argparse import ArgumentParser
 from diapyr.util import invokeall
 from functools import partial
@@ -71,12 +71,12 @@ def main():
                 task = partial(soakconfig.process, reltarget)
                 task.index = len(tasks)
                 task.target = soakconfig.dirpath / reltarget
-                terminal.head(task.index, task.target, dark = True)
+                terminal.head(task.index, task.target, Style.pending)
                 tasks.append(task)
-        tasks.started = lambda task: terminal.head(task.index, task.target, rev = True)
+        tasks.started = lambda task: terminal.head(task.index, task.target, Style.running)
         tasks.stdout = lambda task, line: terminal.log(task.index, sys.stdout, line)
         tasks.stderr = lambda task, line: terminal.log(task.index, sys.stderr, line)
-        tasks.stopped = lambda task: terminal.head(task.index, task.target)
+        tasks.stopped = lambda task: terminal.head(task.index, task.target, Style.normal)
         tasks.drain(os.cpu_count())
     if config.d:
         with cpuexecutor() as executor:
