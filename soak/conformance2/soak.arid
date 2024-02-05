@@ -16,7 +16,7 @@
 : along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
 soak
-    foo from = foo.aridt
-    foo2 from = no-such-file.aridt
+    failing from = foo.aridt
+    failing2 from = no-such-file.aridt
     bar from = bar.aridt
 yes such path = warp me
