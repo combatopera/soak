@@ -79,7 +79,7 @@ def _toplevel(anydir):
 def createparent(soakroot):
     parent = ConfigCtrl().node
     s = (-parent).scope()
-    s['plugin',] = Directive(plugin)
+    s['!plugin',] = Directive(plugin)
     s['|',] = Function(blockliteral)
     s['//',] = Function(rootpath)
     s['toplevel',] = Snapshot(lambda: _toplevel(soakroot))
