@@ -38,7 +38,7 @@ def plugin(prefix, suffix, scope):
     words = modulename[leadingdots:].split('.')
     relpath = Path(*words[:-1]) / f"{words[-1]}{dotpy}"
     if leadingdots:
-        modulepath = Path(scope.resolved('here').cat(), *['..'] * (leadingdots - 1), relpath)
+        modulepath = Path(scope.resolved('here').scalar, *['..'] * (leadingdots - 1), relpath)
         try:
             modulename = str(modulepath.relative_to(toplevelres.resolve(scope).cat()))[:-len(dotpy)].replace(os.sep, '.')
         except NoSuchPathException:
