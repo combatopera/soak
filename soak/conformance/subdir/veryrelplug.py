@@ -15,7 +15,4 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-from aridity.model import Text
-
-def augment(scope):
-    scope['veryrelplug', 'status'] = Text('veryrelplug OK')
+status = 'veryrelplug OK'

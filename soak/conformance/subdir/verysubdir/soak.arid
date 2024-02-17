@@ -15,6 +15,6 @@
 : You should have received a copy of the GNU General Public License
 : along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-!plugin .relplug furnish
-!plugin ..veryrelplug augment
+relplug status = $pyref(.relplug status)
+veryrelplug status = $pyref(..veryrelplug status)
 soak report.txt from = report.txt.aridt

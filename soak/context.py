@@ -18,37 +18,16 @@
 from .util import PathResolvable, Snapshot
 from aridity import NoSuchPathException
 from aridity.config import ConfigCtrl
-from aridity.model import Directive, Function, Text
+from aridity.model import Function, Text
 from aridity.scope import slashfunction
-from aridity.util import dotpy
 from lagoon import git
 from lagoon.program import ONELINE
-from pathlib import Path
-import os, re, subprocess, yaml
+import re, subprocess, yaml
 
 singledigit = re.compile('[0-9]')
 zeroormorespaces = re.compile(' *')
-zeroormoredots = re.compile('[.]*')
 linefeed = '\n'
 toplevelres = PathResolvable('toplevel')
-
-def plugin(prefix, suffix, scope):
-    modulename, globalname = (o.cat() for _, o in suffix.tophrase().resolve(scope, aslist = True).resolveditems())
-    leadingdots = len(zeroormoredots.match(modulename).group())
-    words = modulename[leadingdots:].split('.')
-    relpath = Path(*words[:-1]) / f"{words[-1]}{dotpy}"
-    if leadingdots:
-        modulepath = Path(scope.resolved('here').scalar, *['..'] * (leadingdots - 1), relpath)
-        try:
-            modulename = str(modulepath.relative_to(toplevelres.resolve(scope).cat()))[:-len(dotpy)].replace(os.sep, '.')
-        except NoSuchPathException:
-            modulename = None # It won't be able to do its own relative imports.
-    else:
-        modulepath = Path(toplevelres.resolve(scope).cat(), relpath)
-    g = {} if modulename is None else dict(__name__ = modulename)
-    with modulepath.open() as f:
-        exec(f.read(), g)
-    g[globalname](scope)
 
 def blockliteral(scope, textresolvable):
     contextindent = scope.resolved('indent').cat()
@@ -79,7 +58,6 @@ def _toplevel(anydir):
 def createparent(soakroot):
     parent = ConfigCtrl().node
     s = (-parent).scope()
-    s['!plugin',] = Directive(plugin)
     s['|',] = Function(blockliteral)
     s['//',] = Function(rootpath)
     s['toplevel',] = Snapshot(lambda: _toplevel(soakroot))
