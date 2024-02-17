@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-from aridity.model import Binary, Function
+from aridity.model import Binary
 from pathlib import Path
 import subprocess, sys
 
@@ -26,7 +26,3 @@ def bdist_wheel(scope, resolvable):
     whlpath, = (projectdir / 'dist').glob('*.whl')
     with whlpath.open('rb') as f:
         return Binary(f.read())
-
-def install(scope):
-    for f in bdist_wheel,:
-        scope[f.__name__,] = Function(f)

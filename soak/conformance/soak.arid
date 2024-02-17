@@ -15,7 +15,7 @@
 : You should have received a copy of the GNU General Public License
 : along with soak.  If not, see <http://www.gnu.org/licenses/>.
 
-!plugin conform install
+bdist_wheel = $pyref(soak.conformance.conform bdist_wheel)
 soak
     conf.json
         from = conf.json.aridt
